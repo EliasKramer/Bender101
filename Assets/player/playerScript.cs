@@ -67,24 +67,24 @@ public class playerScript : MonoBehaviour
                 output += "right, ";
                 _touchingWallRight = true;
             }
-            if (direction.x < 0) //wall on right side - touching on left side
+            else if (direction.x < 0) //wall on right side - touching on left side
             {
                 output += "left, ";
                 _touchingWallLeft = true;
             }
-            if (direction.y < 0) //wall collider is activated on bottom - touching on top side
+            if (direction.y > 0) //wall collider is activated on bottom - touching on top side
             {
                 output += "top, ";
                 _isOnGround = true;
                 //_isCollidingWithHead = true;
             }
-            if (direction.y >= 0) //wall collider is activated on top - touching on bottom side
+            else if (direction.y < 0) //wall collider is activated on top - touching on bottom side
             {
                 output += "bottom, ";
                 _isOnGround = true;
             }
         }
-        if (collision.gameObject.tag == "Environment")
+        else if (collision.gameObject.tag == "Environment")
         {
             _isOnGround = true;
             output += "ground/bottom, ";
