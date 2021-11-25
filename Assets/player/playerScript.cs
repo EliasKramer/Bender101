@@ -13,14 +13,9 @@ public class playerScript : MonoBehaviour
     public float _sideJumpYForceMult = 0.2f;
     private bool _isOnGround = true;
     public bool _isCollidingWithHead = false;
-    private bool _touchingWallLeft = false;
-    private bool _touchingWallRight = false;
-    private bool _isSlidingOnWall = false;
     private Direction _inputDirection = Direction.Right;
     private float _inputDirectionFloat = 1; //is between -1 and 1: 1 is right -1 left
     public float _visualDirectionFloat = 1;
-    private bool _isTouchingWall = false;
-    //List<Collision2D> currentCollisions = new List<Collision2D>();
 
     void Start()
     {
@@ -33,68 +28,13 @@ public class playerScript : MonoBehaviour
     {
         Move();
     }
-    private void FixedUpdate()
-    {
-
-    }
-    /*
-    void OnCollisionEnter2D(Collision2D col)
-    {
-        //currentCollisions.Add(col);
-    }
-    */
-
     private void collHelper(Collision2D collision)
     {
-        Debug.Log("lol");
         String currTag = collision.gameObject.tag;
-        if (currTag == "Environment")
-        {
-            _isOnGround = true;
-        }
         if (currTag == "Obstacle")
         {
-            _isTouchingWall = true;
-        }
-
-        /*
-        String output = "";
-        if (collision.gameObject.tag == "Obstacle")
-        {
-            Vector2 direction = collision.gameObject.transform.position - this.transform.position;
-            //direction.x = (float)Math.Round(direction.x);
-            //direction.y = (float)Math.Round(direction.y);
-            //direction = direction.normalized;
-            Debug.Log($"x{direction.x}y{direction.y}");
-            //curr.GetContact(0).normal
-            if (direction.x > 0) //wall on left side - touching on right side
-            {
-                output += "right, ";
-                _touchingWallRight = true;
-            }
-            else if (direction.x < 0) //wall on right side - touching on left side
-            {
-                output += "left, ";
-                _touchingWallLeft = true;
-            }
-            if (direction.y > 0) //wall collider is activated on bottom - touching on top side
-            {
-                output += "top, ";
-                _isOnGround = true;
-                //_isCollidingWithHead = true;
-            }
-            else if (direction.y < 0) //wall collider is activated on top - touching on bottom side
-            {
-                output += "bottom, ";
-                _isOnGround = true;
-            }
-        }
-        else if (collision.gameObject.tag == "Environment")
-        {
             _isOnGround = true;
-            output += "ground/bottom, ";
         }
-        Debug.Log(output + collision.gameObject.name);*/
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -102,23 +42,9 @@ public class playerScript : MonoBehaviour
     }
     void Move()
     {
-        Debug.Log($"ground:{_isOnGround},touchesWall:{_isTouchingWall}");
         //Debug.Log($"l:{_touchingWallLeft}|r:{_touchingWallRight}|o:{_isCollidingWithHead}|u:{_isOnGround}");
         GetDirection();
-        MoveHorizontal();
-        SlideDown();
-    }
-
-    private void SlideDown()
-    {
-        if (_isSlidingOnWall && rb.velocity.y <= 0)
-        {
-            rb.gravityScale = 0.1f;
-        }
-        else
-        {
-            rb.gravityScale = 1f;
-        }
+        MoveAndJump();
     }
 
     private void GetDirection()
@@ -135,8 +61,7 @@ public class playerScript : MonoBehaviour
         }
 
     }
-
-    private void MoveHorizontal()
+    private void MoveAndJump()
     {
         float movementX = 0;
         movementX = _inputDirectionFloat * _speed * Time.deltaTime;
@@ -150,38 +75,6 @@ public class playerScript : MonoBehaviour
             rb.AddForce(new Vector2(0, _jumpForce));
             _isOnGround = false;
         }
-        /*
-        if (_touchingWallLeft && _inputDirection == Direction.Left)
-        {
-            _isSlidingOnWall = true;
-        }
-        else if (_touchingWallRight && _inputDirection == Direction.Right)
-        {
-            _isSlidingOnWall = true;
-        }
-        else
-        {
-            _isSlidingOnWall = false;
-            movementX = _inputDirectionFloat * _speed * Time.deltaTime;
-            if (_isOnGround)
-            {
-                rb.velocity = new Vector2(movementX, rb.velocity.y);
-            }
-        }
-
-        if (Input.GetButton("Jump") && !_isCollidingWithHead)
-        {
-            if (_isSlidingOnWall)
-            {
-                rb.AddForce(new Vector2(_sideJumpForce * (_inputDirectionFloat * -1), _jumpForce * _sideJumpYForceMult));
-                _isSlidingOnWall = false;
-            }
-            else if (_isOnGround)
-            {
-                rb.AddForce(new Vector2(0, _jumpForce));
-                _isOnGround = false;
-            }
-        */
     }
     enum Direction
     {
