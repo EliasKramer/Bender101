@@ -30,7 +30,14 @@ public class playerScript : MonoBehaviour
     void Update()
     {
         Move();
+        PrintColliders();
     }
+
+    private void PrintColliders()
+    {
+        Debug.Log($"up:{isCollidingOnSide(CollisionSide.Up)}|down:{isCollidingOnSide(CollisionSide.Down)}|left:{isCollidingOnSide(CollisionSide.Left)}|right:{isCollidingOnSide(CollisionSide.Right)}");
+    }
+
     public enum CollisionSide
     {
         Up = 0,
@@ -103,13 +110,13 @@ public class playerScript : MonoBehaviour
             //Debug.Log($"thispos x:{transform.position.x} y:{transform.position.y}|otherpos: x:{collision.transform.position.x} y:{collision.transform.position.y}|diff: x:{transform.position.x-collision.transform.position.x}|y:{transform.position.y - collision.transform.position.y}");
             //Debug.Log($"abstand x:{sizeOfInternalCollider.x/2 + sizeOfCollidedITem.x/2}|y:{sizeOfInternalCollider.y/2 + sizeOfCollidedITem.y/2}");
 
-            Debug.Log($"y this{transform.position.y - collision.transform.position.y}|other{sizeOfInternalCollider.y / 2 + sizeOfCollidedITem.y / 2}|diff: {ydiff}");
-            Debug.Log($"x this{transform.position.x - collision.transform.position.x}|other{sizeOfInternalCollider.x / 2 + sizeOfCollidedITem.x / 2}|diff: {xdiff}");
+            //Debug.Log($"y this{transform.position.y - collision.transform.position.y}|other{sizeOfInternalCollider.y / 2 + sizeOfCollidedITem.y / 2}|diff: {ydiff}");
+            //Debug.Log($"x this{transform.position.x - collision.transform.position.x}|other{sizeOfInternalCollider.x / 2 + sizeOfCollidedITem.x / 2}|diff: {xdiff}");
 
             //{transform.position.y - collision.transform.position.y} ~ {sizeOfInternalCollider.y/2 + sizeOfCollidedITem.y/2} wenn oben oder unten
             //{sizeOfInternalCollider.x/2 + sizeOfCollidedITem.x/2} ~ {transform.position.x-collision.transform.position.x}
         }
-        Debug.Log(name);
+        //Debug.Log(name);
     }
     private void OnCollisionExit2D(Collision2D collision)
     {
@@ -117,6 +124,10 @@ public class playerScript : MonoBehaviour
         {
             if (allCollisions[i] == collision)
             {
+                if(i == (int)CollisionSide.Down)
+                {
+                    _isOnGround = false;
+                }
                 allCollisions[i] = null;
             }
         }
@@ -150,6 +161,25 @@ public class playerScript : MonoBehaviour
         {
             movementX *= _speedInAirMultp;
         }
+
+        if(_inputDirection == Direction.Right && isCollidingOnSide(CollisionSide.Right))
+        {
+            movementX = 0;
+        }
+        if (_inputDirection == Direction.Left && isCollidingOnSide(CollisionSide.Left))
+        {
+            movementX = 0;
+        }
+        //not tested
+        if ((isCollidingOnSide(CollisionSide.Left)||isCollidingOnSide(CollisionSide.Right)))
+        {
+            rb.gravityScale = 0.01f;
+        }
+        else
+        {
+            rb.gravityScale = 1f;
+        }
+
         rb.velocity = new Vector2(movementX, rb.velocity.y);
         if (Input.GetButton("Jump") && _isOnGround)
         {
