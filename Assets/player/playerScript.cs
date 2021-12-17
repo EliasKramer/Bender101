@@ -8,29 +8,35 @@ public class playerScript : MonoBehaviour
     public Rigidbody2D rb;
     private float _speed = 222.0f;
     private float _speedInAirMultp = 0.75f;
-    private float _jumpForce = 350f;
+    private float _jumpForce = 5f;
     public float _sideJumpForce = 20f;
     public float _sideJumpYForceMult = 0.2f;
-    private bool _isOnGround = true;
+    private float _maxJumps = 2;
+    private float _jumpsLeft;
     public bool _isCollidingWithHead = false;
     private Direction _inputDirection = Direction.Right;
     private float _inputDirectionFloat = 1; //is between -1 and 1: 1 is right -1 left
     public float _visualDirectionFloat = 1;
     private Collider2D internalCollider;
     private Collision2D[] allCollisions = new Collision2D[4];
+    private System.DateTime _lastTimePressed;
+    private float _minDelayBetweenJumpsInMs = 300;
 
-    void Start()
+    void Start()    
     {
         rb = GetComponent<Rigidbody2D>();
         rb.velocity = new Vector2(0, 0);
-        internalCollider = GetComponent<Collider2D>();
+        internalCollider = GetComponent<BoxCollider2D>();
+        _jumpsLeft = _maxJumps;
+        _lastTimePressed = System.DateTime.UtcNow;
     }
 
     // Update is called once per frame
     void Update()
     {
         Move();
-        PrintColliders();
+        //Debug.Log($"amout of jump: {_jumpsLeft}");
+        //PrintColliders();
     }
 
     private void PrintColliders()
@@ -74,7 +80,7 @@ public class playerScript : MonoBehaviour
                 {
                     allCollisions[(int)CollisionSide.Down] = collision;
                     name += "underPlayer|";
-                    _isOnGround = true;
+                    _jumpsLeft = _maxJumps;
                 }
             }
             else if (Math.Abs(xdiff) <= allowedDiffX)
@@ -126,7 +132,7 @@ public class playerScript : MonoBehaviour
             {
                 if(i == (int)CollisionSide.Down)
                 {
-                    _isOnGround = false;
+                    //_jumpsLeft--;
                 }
                 allCollisions[i] = null;
             }
@@ -157,7 +163,7 @@ public class playerScript : MonoBehaviour
     {
         float movementX = 0;
         movementX = _inputDirectionFloat * _speed * Time.deltaTime;
-        if (!_isOnGround)
+        if (_jumpsLeft < _maxJumps)
         {
             movementX *= _speedInAirMultp;
         }
@@ -171,7 +177,7 @@ public class playerScript : MonoBehaviour
             movementX = 0;
         }
         //not tested
-        if ((isCollidingOnSide(CollisionSide.Left)||isCollidingOnSide(CollisionSide.Right)))
+        if ((isCollidingOnSide(CollisionSide.Left)||isCollidingOnSide(CollisionSide.Right))&&rb.velocity.y < 0)
         {
             rb.gravityScale = 0.01f;
         }
@@ -181,12 +187,26 @@ public class playerScript : MonoBehaviour
         }
 
         rb.velocity = new Vector2(movementX, rb.velocity.y);
-        if (Input.GetButton("Jump") && _isOnGround)
+        if (Input.GetKeyDown("w") && _jumpsLeft > 0 && HasEnoughDelay())
         {
-            rb.AddForce(new Vector2(0, _jumpForce));
-            _isOnGround = false;
+            Debug.Log($"beforeJump jl: {_jumpsLeft}| afterjump jl: {_jumpsLeft}");
+            rb.velocity = new Vector2(0, _jumpForce);
+            _jumpsLeft--;
         }
     }
+
+    private bool HasEnoughDelay()
+    {
+        System.DateTime startTime = System.DateTime.Now;
+        if((startTime - _lastTimePressed).TotalMilliseconds >= _minDelayBetweenJumpsInMs)
+        {
+            Debug.Log($"delay = {(startTime - _lastTimePressed).TotalMilliseconds}|jl:{_jumpsLeft}");
+            _lastTimePressed = startTime;
+            return true;
+        }
+        return false;
+    }
+
     enum Direction
     {
         Right,
