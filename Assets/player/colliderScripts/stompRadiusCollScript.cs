@@ -2,16 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class stompRadiusCollScript : bendingScript
+public class stompRadiusCollScript : MonoBehaviour
 {
     private GameObject parent;
-    protected override void Start()
+    void Start()
     {
-        base.Start();
+        parent = transform.parent.gameObject;
     }
     private void Update()
     {
-        Debug.Log("mainobject count = " + currCollisions.Count);
+        //Debug.Log("mainobject count = " + currCollisions.Count);
     }
     // Update is called once per frame
     private void OnTriggerEnter2D(Collider2D givenCollider)
@@ -19,7 +19,7 @@ public class stompRadiusCollScript : bendingScript
         if (givenCollider.tag == "Stone")
         {
             Debug.Log($"collision with: {givenCollider.name}");
-            currCollisions.Add(givenCollider.gameObject);
+            GetComponentInParent<bendingScript>().addCollidedStone(givenCollider.gameObject);
         }
     }
 
@@ -29,7 +29,7 @@ public class stompRadiusCollScript : bendingScript
         {
             Debug.Log($"collision exit with: {givenCollider.name}");
 
-            currCollisions.Remove(givenCollider.gameObject);
+            GetComponentInParent<bendingScript>().remCollidedStone(givenCollider.gameObject);
         }
     }
 }

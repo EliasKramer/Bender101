@@ -11,7 +11,7 @@ public class bendingScript : MonoBehaviour
     private System.DateTime _lastTimeStompAttack;
     private float _stompAttackMinDelayInMs = 500f;
     private float _forceForStone = 1000f;
-    protected virtual void Start()
+    void Start()
     {
         currCollisions = new List<GameObject>();
         coll = GetComponent<CircleCollider2D>();
@@ -43,5 +43,13 @@ public class bendingScript : MonoBehaviour
         {
             return false;
         }
+    }
+    public void addCollidedStone(GameObject gObj)
+    {
+        currCollisions.Add(gObj);
+    }
+    public void remCollidedStone(GameObject gObj)
+    {
+        currCollisions.Remove(gObj);
     }
 }
