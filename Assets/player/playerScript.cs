@@ -59,7 +59,6 @@ public class playerScript : MonoBehaviour
     }
     private void OnCollisionStay2D(Collision2D collision)
     {
-        String name = "";
         String currTag = collision.gameObject.tag;
         if (currTag == "Obstacle")
         {
@@ -76,12 +75,10 @@ public class playerScript : MonoBehaviour
                 if (yVal < 0)
                 {
                     allCollisions[(int)CollisionSide.Up] = collision;
-                    name += "overPlayer|";
                 }
                 else
                 {
                     allCollisions[(int)CollisionSide.Down] = collision;
-                    name += "underPlayer|";
                     _jumpsLeft = _maxJumps;
                 }
             }
@@ -90,41 +87,13 @@ public class playerScript : MonoBehaviour
                 if (xdiff < 0)
                 {
                     allCollisions[(int)CollisionSide.Right] = collision;
-                    name += "rightPlayer|";
                 }
                 else
                 {
                     allCollisions[(int)CollisionSide.Left] = collision;
-                    name += "leftPlayer|";
                 }
             }
-            /*if (dir.x < 0)
-            {
-                name += "left|";
-            }
-            if (dir.x > 0)
-            {
-                name += "right|";
-            }
-            if (dir.y < 0)
-            {
-                name += "under|";
-            }
-            if (dir.y > 0)
-            {
-                name += "top|";
-            }*/
-            //Debug.Log($"directionvec x:{dir.x}y:{dir.y}|othersize: {sizeOfCollidedITem}| thissize: {sizeOfInternalCollider} |colision{collision.gameObject.name}");
-            //Debug.Log($"thispos x:{transform.position.x} y:{transform.position.y}|otherpos: x:{collision.transform.position.x} y:{collision.transform.position.y}|diff: x:{transform.position.x-collision.transform.position.x}|y:{transform.position.y - collision.transform.position.y}");
-            //Debug.Log($"abstand x:{sizeOfInternalCollider.x/2 + sizeOfCollidedITem.x/2}|y:{sizeOfInternalCollider.y/2 + sizeOfCollidedITem.y/2}");
-
-            //Debug.Log($"y this{transform.position.y - collision.transform.position.y}|other{sizeOfInternalCollider.y / 2 + sizeOfCollidedITem.y / 2}|diff: {ydiff}");
-            //Debug.Log($"x this{transform.position.x - collision.transform.position.x}|other{sizeOfInternalCollider.x / 2 + sizeOfCollidedITem.x / 2}|diff: {xdiff}");
-
-            //{transform.position.y - collision.transform.position.y} ~ {sizeOfInternalCollider.y/2 + sizeOfCollidedITem.y/2} wenn oben oder unten
-            //{sizeOfInternalCollider.x/2 + sizeOfCollidedITem.x/2} ~ {transform.position.x-collision.transform.position.x}
         }
-        //Debug.Log(name);
     }
     private void OnCollisionExit2D(Collision2D collision)
     {
@@ -198,7 +167,7 @@ public class playerScript : MonoBehaviour
     }
     public void MoveAction(InputAction.CallbackContext context)
     {
-        Debug.Log($"inputthrough new system:{context.ReadValue<Vector2>()}");
+        //Debug.Log($"inputthrough new system:{context.ReadValue<Vector2>()}");
         _inputVector = context.ReadValue<Vector2>();
     }
     private bool HasEnoughDelay()
