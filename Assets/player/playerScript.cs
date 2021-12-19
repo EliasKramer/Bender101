@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class playerScript : MonoBehaviour
 {
@@ -21,7 +22,7 @@ public class playerScript : MonoBehaviour
     private Collision2D[] allCollisions = new Collision2D[4];
     private System.DateTime _lastTimePressed;
     private float _minDelayBetweenJumpsInMs = 300;
-
+    private Vector2 _inputVector;
     void Start()    
     {
         rb = GetComponent<Rigidbody2D>();
@@ -29,6 +30,7 @@ public class playerScript : MonoBehaviour
         internalCollider = GetComponent<BoxCollider2D>();
         _jumpsLeft = _maxJumps;
         _lastTimePressed = System.DateTime.UtcNow;
+        _inputVector = new Vector2(0, 0);
     }
 
     // Update is called once per frame
@@ -147,8 +149,9 @@ public class playerScript : MonoBehaviour
 
     private void GetDirection()
     {
-        _inputDirectionFloat = Input.GetAxis("Horizontal");
-
+        //Debug.Log($"dirvec: {_inputVector}");
+        //Debug.Log($"dirvec: {Mathf.Round(_inputVector.x)}");
+        _inputDirectionFloat = Mathf.Round(_inputVector.x);//Input.GetAxis("Horizontal");
         if (_inputDirectionFloat < 0)
         {
             _inputDirection = Direction.Left;
@@ -157,7 +160,6 @@ public class playerScript : MonoBehaviour
         {
             _inputDirection = Direction.Right;
         }
-
     }
     private void MoveAndJump()
     {
@@ -176,7 +178,6 @@ public class playerScript : MonoBehaviour
         {
             movementX = 0;
         }
-        //not tested
         if ((isCollidingOnSide(CollisionSide.Left)||isCollidingOnSide(CollisionSide.Right))&&rb.velocity.y < 0)
         {
             rb.gravityScale = 0.01f;
@@ -187,14 +188,19 @@ public class playerScript : MonoBehaviour
         }
 
         rb.velocity = new Vector2(movementX, rb.velocity.y);
-        if (Input.GetKeyDown("w") && _jumpsLeft > 0 && HasEnoughDelay())
+
+        if ((Mathf.Round(_inputVector.y) == 1) && _jumpsLeft > 0 && HasEnoughDelay())
         {
             Debug.Log($"beforeJump jl: {_jumpsLeft}| afterjump jl: {_jumpsLeft}");
             rb.velocity = new Vector2(0, _jumpForce);
             _jumpsLeft--;
         }
     }
-
+    public void MoveAction(InputAction.CallbackContext context)
+    {
+        Debug.Log($"inputthrough new system:{context.ReadValue<Vector2>()}");
+        _inputVector = context.ReadValue<Vector2>();
+    }
     private bool HasEnoughDelay()
     {
         System.DateTime startTime = System.DateTime.Now;
