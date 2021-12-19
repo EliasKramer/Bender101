@@ -18,16 +18,15 @@ public class playerScript : MonoBehaviour
     private Direction _inputDirection = Direction.Right;
     private float _inputDirectionFloat = 1; //is between -1 and 1: 1 is right -1 left
     public float _visualDirectionFloat = 1;
-    private Collider2D internalCollider;
-    private Collision2D[] allCollisions = new Collision2D[4];
+    private bool[] allCollisions = new bool[4];
     private System.DateTime _lastTimePressed;
     private float _minDelayBetweenJumpsInMs = 300;
     private Vector2 _inputVector;
-    void Start()    
+    private float _slidingSpeed = -0.5f;
+    void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.velocity = new Vector2(0, 0);
-        internalCollider = GetComponent<BoxCollider2D>();
         _jumpsLeft = _maxJumps;
         _lastTimePressed = System.DateTime.UtcNow;
         _inputVector = new Vector2(0, 0);
@@ -38,27 +37,34 @@ public class playerScript : MonoBehaviour
     {
         Move();
         //Debug.Log($"amout of jump: {_jumpsLeft}");
-        //PrintColliders();
+        PrintColliders();
     }
 
     private void PrintColliders()
     {
-        Debug.Log($"up:{isCollidingOnSide(CollisionSide.Up)}|down:{isCollidingOnSide(CollisionSide.Down)}|left:{isCollidingOnSide(CollisionSide.Left)}|right:{isCollidingOnSide(CollisionSide.Right)}");
+        Debug.Log($"up:{isCollidingOnSide(Const.CollisionSide.Up)}|down:{isCollidingOnSide(Const.CollisionSide.Down)}|left:{isCollidingOnSide(Const.CollisionSide.Left)}|right:{isCollidingOnSide(Const.CollisionSide.Right)}");
     }
 
-    public enum CollisionSide
+    public bool isCollidingOnSide(Const.CollisionSide side)
     {
-        Up = 0,
-        Down = 1,
-        Left = 2,
-        Right = 3
-    };
-    public bool isCollidingOnSide(CollisionSide side)
+        return allCollisions[(int)side];
+    }
+    public void CollisionAddByChildCollider(bool val, Const.CollisionSide side)
     {
-        return allCollisions[(int)side] != null;
+        allCollisions[(int)side] = val;
+        if (side == Const.CollisionSide.Down)
+        {
+            _jumpsLeft = _maxJumps;
+        }
+        //Debug.Log($"")
+    }
+    public void CollisionRemByChildCollider(bool val, Const.CollisionSide side)
+    {
+        allCollisions[(int)side] = val;
     }
     private void OnCollisionStay2D(Collision2D collision)
     {
+        /*
         String currTag = collision.gameObject.tag;
         if (currTag == "Obstacle")
         {
@@ -93,21 +99,22 @@ public class playerScript : MonoBehaviour
                     allCollisions[(int)CollisionSide.Left] = collision;
                 }
             }
-        }
+        }*/
     }
     private void OnCollisionExit2D(Collision2D collision)
     {
+        /*
         for (int i = 0; i < allCollisions.Length; i++)
         {
             if (allCollisions[i] == collision)
             {
-                if(i == (int)CollisionSide.Down)
+                if(i == (int)Const.CollisionSide.Down)
                 {
                     //_jumpsLeft--;
                 }
                 allCollisions[i] = null;
             }
-        }
+        }*/
     }
     void Move()
     {
@@ -139,16 +146,21 @@ public class playerScript : MonoBehaviour
             movementX *= _speedInAirMultp;
         }
 
-        if(_inputDirection == Direction.Right && isCollidingOnSide(CollisionSide.Right))
+        if (_inputDirection == Direction.Right && isCollidingOnSide(Const.CollisionSide.Right))
         {
             movementX = 0;
         }
-        if (_inputDirection == Direction.Left && isCollidingOnSide(CollisionSide.Left))
+        if (_inputDirection == Direction.Left && isCollidingOnSide(Const.CollisionSide.Left))
         {
             movementX = 0;
         }
-        if ((isCollidingOnSide(CollisionSide.Left)||isCollidingOnSide(CollisionSide.Right))&&rb.velocity.y < 0)
+        if ((isCollidingOnSide(Const.CollisionSide.Left) || isCollidingOnSide(Const.CollisionSide.Right)) && rb.velocity.y < 0)
         {
+            //new option:
+            /*if(rb.velocity.y < _slidingSpeed)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, _slidingSpeed);
+            }*/
             rb.gravityScale = 0.01f;
         }
         else
@@ -173,7 +185,7 @@ public class playerScript : MonoBehaviour
     private bool HasEnoughDelay()
     {
         System.DateTime startTime = System.DateTime.Now;
-        if((startTime - _lastTimePressed).TotalMilliseconds >= _minDelayBetweenJumpsInMs)
+        if ((startTime - _lastTimePressed).TotalMilliseconds >= _minDelayBetweenJumpsInMs)
         {
             Debug.Log($"delay = {(startTime - _lastTimePressed).TotalMilliseconds}|jl:{_jumpsLeft}");
             _lastTimePressed = startTime;
