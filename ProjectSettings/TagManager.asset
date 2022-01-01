@@ -7,6 +7,7 @@ TagManager:
   - Environment
   - Obstacle
   - Stone
+  - ActionField
   layers:
   - Default
   - TransparentFX

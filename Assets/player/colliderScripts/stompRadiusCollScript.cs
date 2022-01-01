@@ -8,6 +8,10 @@ public class stompRadiusCollScript : MonoBehaviour
         {
             GetComponentInParent<bendingScript>().addCollidedStone(givenCollider.gameObject);
         }
+        if(givenCollider.tag == "ActionField")
+        {
+            Debug.Log("Entered field of action");
+        }
     }
     private void OnTriggerExit2D(Collider2D givenCollider)
     {

@@ -7,17 +7,14 @@ using UnityEngine.InputSystem;
 public class playerScript : MonoBehaviour
 {
     public Rigidbody2D rb;
-    private float _speed = 222.0f;
+    private float _speed = 300f;
     private float _speedInAirMultp = 0.75f;
-    private float _jumpForce = 5f;
-    public float _sideJumpForce = 20f;
-    public float _sideJumpYForceMult = 0.2f;
+    private float _jumpForce = 6.5f;
     private float _maxJumps = 2;
     private float _jumpsLeft;
     public bool _isCollidingWithHead = false;
     private Direction _inputDirection = Direction.Right;
     private float _inputDirectionFloat = 1; //is between -1 and 1: 1 is right -1 left
-    public float _visualDirectionFloat = 1;
     private bool[] allCollisions = new bool[4];
     private System.DateTime _lastTimePressed;
     private float _minDelayBetweenJumpsInMs = 300;
@@ -37,7 +34,7 @@ public class playerScript : MonoBehaviour
     {
         Move();
         //Debug.Log($"amout of jump: {_jumpsLeft}");
-        PrintColliders();
+        //PrintColliders();
     }
 
     private void PrintColliders()
@@ -61,60 +58,6 @@ public class playerScript : MonoBehaviour
     public void CollisionRemByChildCollider(bool val, Const.CollisionSide side)
     {
         allCollisions[(int)side] = val;
-    }
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        /*
-        String currTag = collision.gameObject.tag;
-        if (currTag == "Obstacle")
-        {
-            Vector2 sizeOfCollidedITem = collision.gameObject.GetComponent<Collider2D>().bounds.size;
-            Vector2 sizeOfInternalCollider = internalCollider.bounds.size;
-            float yVal = transform.position.y - collision.transform.position.y;
-            float ydiff = Math.Abs(yVal) - Math.Abs((sizeOfInternalCollider.y / 2 + sizeOfCollidedITem.y / 2));
-            float xdiff = Math.Abs((transform.position.x - collision.transform.position.x)) - Math.Abs((sizeOfInternalCollider.x / 2 + sizeOfCollidedITem.x / 2));
-            float allowedDiffY = 0.02f;
-            float allowedDiffX = 0.05f;
-
-            if (Math.Abs(ydiff) <= allowedDiffY)
-            {
-                if (yVal < 0)
-                {
-                    allCollisions[(int)CollisionSide.Up] = collision;
-                }
-                else
-                {
-                    allCollisions[(int)CollisionSide.Down] = collision;
-                    _jumpsLeft = _maxJumps;
-                }
-            }
-            else if (Math.Abs(xdiff) <= allowedDiffX)
-            {
-                if (xdiff < 0)
-                {
-                    allCollisions[(int)CollisionSide.Right] = collision;
-                }
-                else
-                {
-                    allCollisions[(int)CollisionSide.Left] = collision;
-                }
-            }
-        }*/
-    }
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        /*
-        for (int i = 0; i < allCollisions.Length; i++)
-        {
-            if (allCollisions[i] == collision)
-            {
-                if(i == (int)Const.CollisionSide.Down)
-                {
-                    //_jumpsLeft--;
-                }
-                allCollisions[i] = null;
-            }
-        }*/
     }
     void Move()
     {
@@ -154,20 +97,12 @@ public class playerScript : MonoBehaviour
         {
             movementX = 0;
         }
-        if ((isCollidingOnSide(Const.CollisionSide.Left) || isCollidingOnSide(Const.CollisionSide.Right)) && rb.velocity.y < 0)
+        if ((isCollidingOnSide(Const.CollisionSide.Left) || isCollidingOnSide(Const.CollisionSide.Right)) && rb.velocity.y < _slidingSpeed)
         {
-            //new option:
-            /*if(rb.velocity.y < _slidingSpeed)
-            {
-                rb.velocity = new Vector2(rb.velocity.x, _slidingSpeed);
-            }*/
-            rb.gravityScale = 0.01f;
-        }
-        else
-        {
-            rb.gravityScale = 1f;
-        }
 
+            rb.velocity = new Vector2(rb.velocity.x, _slidingSpeed);
+
+        }
         rb.velocity = new Vector2(movementX, rb.velocity.y);
 
         if ((Mathf.Round(_inputVector.y) == 1) && _jumpsLeft > 0 && HasEnoughDelay())
