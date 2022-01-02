@@ -7,12 +7,12 @@ using UnityEngine.InputSystem;
 public class playerScript : MonoBehaviour
 {
     public Rigidbody2D rb;
-    private float _speed = 300f;
+    private float _speed = 1000f;
     private float _speedInAirMultp = 0.75f;
     private float _jumpForce = 6.5f;
     private float _maxJumps = 2;
     private float _jumpsLeft;
-    public bool _isCollidingWithHead = false;
+    private bool _isCollidingWithHead = false;
     private Direction _inputDirection = Direction.Right;
     private float _inputDirectionFloat = 1; //is between -1 and 1: 1 is right -1 left
     private bool[] allCollisions = new bool[4];
@@ -86,6 +86,7 @@ public class playerScript : MonoBehaviour
         movementX = _inputDirectionFloat * _speed * Time.deltaTime;
         if (_jumpsLeft < _maxJumps)
         {
+            Debug.Log("airspeedmult active");
             movementX *= _speedInAirMultp;
         }
 

@@ -42,9 +42,27 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Bend",
+                    "name": "PushAttack",
                     "type": "Button",
                     "id": "3ea9aba8-6603-4690-835e-a02303b03bf7",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "PullAttack",
+                    "type": "Button",
+                    "id": "56a4449e-17c3-4375-b0b9-c23975d02f19",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "AltMode1",
+                    "type": "Button",
+                    "id": "c1b75e3a-019a-46e2-8a42-9387516aa671",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -290,7 +308,29 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "Bend",
+                    "action": "PushAttack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5e8fdc38-d058-46a5-8c6e-6922bd18e7bd",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "PullAttack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ec327ff0-fff0-4a81-99bb-7f625752998f",
+                    "path": "<Keyboard>/shift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "AltMode1",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

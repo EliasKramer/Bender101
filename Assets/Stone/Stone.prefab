@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7252809574651577304}
   - component: {fileID: 7252809574651577305}
   - component: {fileID: 7252809574651577310}
-  - component: {fileID: 7252809574651577311}
+  - component: {fileID: 6068535842181650878}
   m_Layer: 0
   m_Name: Stone
   m_TagString: Stone
@@ -107,8 +107,8 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!58 &7252809574651577311
-CircleCollider2D:
+--- !u!60 &6068535842181650878
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -121,5 +121,34 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
-  serializedVersion: 2
-  m_Radius: 0.52
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0.41, y: -0.04}
+      - {x: 0.42999998, y: 0.04}
+      - {x: 0.42999998, y: 0.21}
+      - {x: 0.39999998, y: 0.29999998}
+      - {x: 0.22999999, y: 0.35}
+      - {x: 0.03, y: 0.35}
+      - {x: -0.08, y: 0.29999998}
+      - {x: -0.26, y: 0.35}
+      - {x: -0.41, y: 0.35}
+      - {x: -0.45999998, y: 0.28}
+      - {x: -0.45999998, y: 0.089999996}
+      - {x: -0.44, y: -0.06}
+      - {x: -0.42999998, y: -0.26}
+      - {x: -0.39, y: -0.31}
+      - {x: -0.26999998, y: -0.41}
+      - {x: 0.06, y: -0.42}
+      - {x: 0.14, y: -0.44}
+      - {x: 0.32999998, y: -0.44}
+      - {x: 0.38, y: -0.39999998}
+      - {x: 0.38, y: -0.26999998}
