@@ -33,7 +33,7 @@ public class bendingScript : MonoBehaviour
     {
         currActionFieldCollisions = new List<GameObject>();
         _lastTimeStompAttack = DateTime.UtcNow;
-        actualPlayerCollisions = new List<GameObject> ();
+        actualPlayerCollisions = new List<GameObject>();
     }
     // Update is called once per frame
     void Update()
@@ -66,12 +66,12 @@ public class bendingScript : MonoBehaviour
                     {
                         distance = boundsSize.y;
                     }
-                    distance *= 0.8f;
+                    //distance *= 0.8f;
                     if (distance < 2f)
                     {
                         distance = 2f;
                     }
-                    Debug.Log($"Boundssize {boundsSize}||distance {distance}");
+                    //Debug.Log($"Boundssize {boundsSize}||distance {distance}");
                     actualSpeedVec *= 2f * (distanceVec.magnitude - distance);
                     //Debug.Log($"forcevec = {distanceVec}");
                     curr.GetComponent<Rigidbody2D>().velocity = actualSpeedVec;
@@ -81,24 +81,59 @@ public class bendingScript : MonoBehaviour
             {
                 foreach (GameObject curr in currActionFieldCollisions)
                 {
-                    Debug.Log(curr.name);
-                    if (!actualPlayerCollisions.Contains(curr))
-                    {
-                        Vector2 distanceVec = (_worldPointWhereClicked - (Vector2)curr.transform.position);
+                    Vector2 distanceClickedObj = (_worldPointWhereClicked - (Vector2)curr.transform.position);
+                    Vector2 actualSpeedVec = distanceClickedObj.normalized; // give direction
 
-                        //Debug.Log($"distancevec: {distanceVec.magnitude}");
-                        Vector2 actualSpeedVec = distanceVec.normalized;
-                        actualSpeedVec *= 2f * (distanceVec.magnitude - 0.4f);
-                        //Debug.Log($"forcevec = {distanceVec}");
-                        curr.GetComponent<Rigidbody2D>().velocity = actualSpeedVec;
+                    Vector2 distanceObjPlayer = ((Vector2)this.transform.position - (Vector2)curr.transform.position);
+                    Vector2 boundsSize = curr.gameObject.GetComponent<Collider2D>().bounds.size;
+
+                    float dotMovement = Vector2.Dot(distanceClickedObj, distanceObjPlayer); //if > 0 = moving to player
+                    bool isMovingToPlayer = dotMovement > 0;
+
+                    actualSpeedVec *= 5f; // setting the speed
+
+                    if (isMovingToPlayer)
+                    {
+                        float distance = boundsSize.x;
+                        if (distance < boundsSize.y) //get widest part of the moving body 
+                        {
+                            distance = boundsSize.y;
+                        }
+
+                        if (distance < 1.3f)
+                        {
+                            distance = 1.3f;
+                        }
+
+                        //float speedMultForMouseDistance = distanceClickedObj.magnitude - 0.4f; //mouse distance
+                        float speedMultForPlayerDistance = 1; //between 1 and 0
+
+                        float innerBorder = 1f;
+                        float outerBorder = 1.2f;
+                        float distBetweenBorders = outerBorder - innerBorder;
+
+                        float calcNumber = distanceObjPlayer.magnitude - (distance/2);
+
+                        if(calcNumber < innerBorder)
+                        {
+                            //wenn man keinen negativen speed haben will hier:
+                            //speedMultForPlayerDistance = 0;
+                        }
+                        if(calcNumber < outerBorder)
+                        {
+                            float calcNumberInBorderSystem = calcNumber - innerBorder;
+                            speedMultForPlayerDistance = calcNumberInBorderSystem / distBetweenBorders;
+                        }
+
+                        actualSpeedVec *= speedMultForPlayerDistance;
+                        //actualSpeedVec *= speedMultForMouseDistance;
+
+                        Debug.Log($"{innerBorder}<{calcNumber}<{outerBorder}| pl{speedMultForPlayerDistance} -> {actualSpeedVec.magnitude}");
                     }
+                    curr.GetComponent<Rigidbody2D>().velocity = actualSpeedVec;
                 }
             }
         }
-
-        //Instantiate(this._actionField, posForActionField, Quaternion.identity);
-
-
     }
     private void CheckDelays()
     {
@@ -136,7 +171,7 @@ public class bendingScript : MonoBehaviour
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.collider.tag == "Stone")
+        if (collision.collider.tag == "Stone")
         {
             actualPlayerCollisions.Add(collision.gameObject);
         }
