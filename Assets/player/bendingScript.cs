@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -102,9 +101,16 @@ public class bendingScript : MonoBehaviour
 
                 Vector2 addedBounds = (vectorToPlayer.normalized * objectBounds.magnitude) / 4;
 
-                Vector2 posToMoveTo = ((Vector2)this.transform.position + sidePointsForHoveringStones[i] + addedBounds);
+                Vector2 posToMoveTo = CalculateMoreDistanceIfObjectIsBigger(currObj,sidePointsForHoveringStones[i],0.25f,0.3f);
 
-                posToMoveTo.y += (addedBounds.y / 1.5f);
+                /*Vector2 debugPos = currObj.transform.position;
+                debugPos.y -= (currObj.GetComponent<Collider2D>().bounds.size.y/2);
+
+                Debug.DrawLine(currObj.transform.position,
+                   debugPos,
+                   Color.magenta, 0.5f);*/
+
+                //posToMoveTo.y += (addedBounds.y / 1.5f);
 
                 //vector from the current stone to the hover position
                 Vector2 vectorToPoint = vectorObjPos - posToMoveTo;
@@ -123,54 +129,62 @@ public class bendingScript : MonoBehaviour
             }
             if (objectsToMove[i] != null) // if the player finds a stone, it should be moved
             {
-
-                Vector2 vecToPlayer = (Vector2)objectsToMove[i].gameObject.transform.position - (Vector2)this.transform.position;
-
-                Vector2 objectPosition = objectsToMove[i].transform.position;
-
-                Vector2 playerPos = transform.position;
-
-                Vector2 objectBounds = objectsToMove[i].GetComponent<Collider2D>().bounds.size;
-
-                Vector2 addedBounds = (vecToPlayer.normalized * objectBounds.magnitude) / 4;
-
-                //move it slower if it has too less distance to avoid shaking
                 float slowDownIfNearMult = MultiplierForObjectSlowDown(vecToObject[i].magnitude, 0.1f, 0.8f, false);
                 objectsToMove[i].GetComponent<Rigidbody2D>().velocity = (vecToObject[i].normalized) * 5f * -1f * slowDownIfNearMult;
-
-
-
-
-                Debug.DrawLine(objectPosition,
-                    playerPos,  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
-                    Color.magenta, 0.5f);
-
-                Debug.DrawLine(objectPosition,
-                     objectPosition + ((vecToObject[i].normalized) * 2f * -1f * slowDownIfNearMult),  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
-                    Color.red, 0.5f);
-
-                Debug.DrawLine(objectPosition,
-                    objectPosition + addedBounds,  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
-                    Color.green, 0.5f);
-
-                Debug.DrawLine(objectPosition,
-                    playerPos+sidePointsForHoveringStones[i]+addedBounds,  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
-                    Color.blue, 0.5f);
-
             }
         }
     }
+
+    private Vector2 CalculateMoreDistanceIfObjectIsBigger(GameObject objectToMove, Vector2 vecFromThisPosToDestinationPos,float distanceMultiplier,float yMultiplier)
+    {
+        //vector from the current stone to the player;
+        Vector2 vectorToPlayer = (Vector2)objectToMove.gameObject.transform.position - (Vector2)this.transform.position;
+
+        Vector2 objectBounds = objectToMove.GetComponent<Collider2D>().bounds.size;
+
+        Vector2 addedBounds = (vectorToPlayer.normalized * objectBounds.magnitude) * distanceMultiplier;
+
+        Vector2 posToMoveTo = (Vector2)this.transform.position + vecFromThisPosToDestinationPos;
+
+        Vector2 retVal = posToMoveTo + addedBounds;
+        
+        retVal.y += (yMultiplier*(objectBounds.y/2));
+        
+        return retVal;
+    }
+
     private void PerformPullToPlayerAttack()
     {
         foreach (GameObject curr in currActionFieldCollisions)
         {
-            //Vector2 dir = ((Vector2)this.transform.position - (Vector2)curr.transform.position).normalized; //weiter weg wenn obj größer TODO TODO TODO
-            Vector2 distanceVec = ((Vector2)this.transform.position - (Vector2)curr.transform.position);// +(curr.GetComponent<Collider2D>().bounds.size.magnitude*dir));
-            Vector2 actualSpeedVec = distanceVec.normalized;
+            float preferedDistance = 2f;
+            Vector2 vectorPlayerToObj = ((Vector2)this.transform.position - (Vector2)curr.transform.position);
 
-            actualSpeedVec *= 2f * MultiplierForObjectSlowDown(distanceVec.magnitude, 2f, 2.5f, true);
-            curr.GetComponent<Rigidbody2D>().velocity = actualSpeedVec;
-            Debug.DrawLine(curr.transform.position, (Vector2)curr.transform.position - actualSpeedVec, Color.green, 0.1f);
+            Debug.DrawLine(curr.transform.position,
+                (Vector2)curr.transform.position + vectorPlayerToObj, Color.red,
+                0.1f);
+
+            Vector2 direction = vectorPlayerToObj.normalized;
+
+            Debug.DrawLine(this.transform.position,
+                (Vector2)this.transform.position - direction* preferedDistance, Color.blue,
+                0.1f);
+
+            Vector2 actualSpeed = (Vector2)curr.transform.position - CalculateMoreDistanceIfObjectIsBigger(curr, direction * preferedDistance*-1f, 0.1f, 0.3f);
+
+            Debug.DrawLine(this.transform.position,
+                (Vector2)this.transform.position + direction * preferedDistance*-1f, Color.green,
+                0.1f);
+            Debug.DrawLine(this.transform.position,
+                (Vector2)this.transform.position + actualSpeed, Color.black,
+                0.1f);
+            direction *= 2f * actualSpeed.normalized * MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance-0.2f, preferedDistance-0.1f, true)*-1f;
+            Debug.Log($"objectslowdown: {MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance - 0.2f, preferedDistance - 0.1f, true)}");
+            Debug.DrawLine(curr.transform.position,
+                (Vector2)curr.transform.position + direction, Color.magenta,
+                0.1f);
+
+            curr.GetComponent<Rigidbody2D>().velocity = direction;
         }
     }
     private void PerformPullToMouseAttack()
