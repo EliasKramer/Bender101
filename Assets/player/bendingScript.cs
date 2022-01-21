@@ -93,10 +93,21 @@ public class bendingScript : MonoBehaviour
         {
             foreach (GameObject currObj in currActionFieldCollisions) // iterate through every stone in the players range
             {
-                //vector from the current stone to the hover position
-                Vector2 vectorToPoint = (Vector2)currObj.gameObject.transform.position - ((Vector2)this.transform.position + sidePointsForHoveringStones[i]);
                 //vector from the current stone to the player;
                 Vector2 vectorToPlayer = (Vector2)currObj.gameObject.transform.position - (Vector2)this.transform.position;
+
+                Vector2 vectorObjPos = currObj.transform.position;
+
+                Vector2 objectBounds = currObj.GetComponent<Collider2D>().bounds.size;
+
+                Vector2 addedBounds = (vectorToPlayer.normalized * objectBounds.magnitude) / 4;
+
+                Vector2 posToMoveTo = ((Vector2)this.transform.position + sidePointsForHoveringStones[i] + addedBounds);
+
+                posToMoveTo.y += (addedBounds.y / 1.5f);
+
+                //vector from the current stone to the hover position
+                Vector2 vectorToPoint = vectorObjPos - posToMoveTo;
 
                 //try to finding a stone for each hover spot. if the hover position is on the left side, the stone that gets pulled to that position has to be on the left side too
                 if ((vectorToPlayer.x < 0 && sidePointsForHoveringStones[i].x < 0) || ((vectorToPlayer.x >= 0 && sidePointsForHoveringStones[i].x >= 0)))
@@ -112,10 +123,40 @@ public class bendingScript : MonoBehaviour
             }
             if (objectsToMove[i] != null) // if the player finds a stone, it should be moved
             {
+
+                Vector2 vecToPlayer = (Vector2)objectsToMove[i].gameObject.transform.position - (Vector2)this.transform.position;
+
+                Vector2 objectPosition = objectsToMove[i].transform.position;
+
+                Vector2 playerPos = transform.position;
+
+                Vector2 objectBounds = objectsToMove[i].GetComponent<Collider2D>().bounds.size;
+
+                Vector2 addedBounds = (vecToPlayer.normalized * objectBounds.magnitude) / 4;
+
                 //move it slower if it has too less distance to avoid shaking
                 float slowDownIfNearMult = MultiplierForObjectSlowDown(vecToObject[i].magnitude, 0.1f, 0.8f, false);
-                objectsToMove[i].GetComponent<Rigidbody2D>().velocity = (vecToObject[i].normalized) * 2f * -1f * slowDownIfNearMult;
-                Debug.DrawLine(objectsToMove[i].transform.position, (Vector2)objectsToMove[i].transform.position - (vecToObject[i].normalized) * 2f * -1f * slowDownIfNearMult, Color.red, 0.5f);
+                objectsToMove[i].GetComponent<Rigidbody2D>().velocity = (vecToObject[i].normalized) * 5f * -1f * slowDownIfNearMult;
+
+
+
+
+                Debug.DrawLine(objectPosition,
+                    playerPos,  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
+                    Color.magenta, 0.5f);
+
+                Debug.DrawLine(objectPosition,
+                     objectPosition + ((vecToObject[i].normalized) * 2f * -1f * slowDownIfNearMult),  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
+                    Color.red, 0.5f);
+
+                Debug.DrawLine(objectPosition,
+                    objectPosition + addedBounds,  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
+                    Color.green, 0.5f);
+
+                Debug.DrawLine(objectPosition,
+                    playerPos+sidePointsForHoveringStones[i]+addedBounds,  //objectsToMove[i].GetComponent<Collider2D>().bounds.size.magnitude),
+                    Color.blue, 0.5f);
+
             }
         }
     }
