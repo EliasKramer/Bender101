@@ -101,7 +101,7 @@ public class bendingScript : MonoBehaviour
 
                 Vector2 addedBounds = (vectorToPlayer.normalized * objectBounds.magnitude) / 4;
 
-                Vector2 posToMoveTo = CalculateMoreDistanceIfObjectIsBigger(currObj,sidePointsForHoveringStones[i],0.25f,0.3f);
+                Vector2 posToMoveTo = CalculateMoreDistanceIfObjectIsBigger(currObj, sidePointsForHoveringStones[i], 0.25f, 0.3f);
 
                 /*Vector2 debugPos = currObj.transform.position;
                 debugPos.y -= (currObj.GetComponent<Collider2D>().bounds.size.y/2);
@@ -113,7 +113,7 @@ public class bendingScript : MonoBehaviour
                 //posToMoveTo.y += (addedBounds.y / 1.5f);
 
                 //vector from the current stone to the hover position
-                Vector2 vectorToPoint = vectorObjPos - posToMoveTo;
+                Vector2 vectorToPoint = vectorObjPos - ((Vector2)this.transform.position + posToMoveTo);
 
                 //try to finding a stone for each hover spot. if the hover position is on the left side, the stone that gets pulled to that position has to be on the left side too
                 if ((vectorToPlayer.x < 0 && sidePointsForHoveringStones[i].x < 0) || ((vectorToPlayer.x >= 0 && sidePointsForHoveringStones[i].x >= 0)))
@@ -135,7 +135,7 @@ public class bendingScript : MonoBehaviour
         }
     }
 
-    private Vector2 CalculateMoreDistanceIfObjectIsBigger(GameObject objectToMove, Vector2 vecFromThisPosToDestinationPos,float distanceMultiplier,float yMultiplier)
+    private Vector2 CalculateMoreDistanceIfObjectIsBigger(GameObject objectToMove, Vector2 vecFromThisPosToDestinationPos, float distanceMultiplier, float yMultiplier)
     {
         //vector from the current stone to the player;
         Vector2 vectorToPlayer = (Vector2)objectToMove.gameObject.transform.position - (Vector2)this.transform.position;
@@ -144,12 +144,12 @@ public class bendingScript : MonoBehaviour
 
         Vector2 addedBounds = (vectorToPlayer.normalized * objectBounds.magnitude) * distanceMultiplier;
 
-        Vector2 posToMoveTo = (Vector2)this.transform.position + vecFromThisPosToDestinationPos;
+        Vector2 posToMoveTo = vecFromThisPosToDestinationPos;
 
         Vector2 retVal = posToMoveTo + addedBounds;
-        
-        retVal.y += (yMultiplier*(objectBounds.y/2));
-        
+
+        retVal.y += (yMultiplier * (objectBounds.y / 2));
+
         return retVal;
     }
 
@@ -158,7 +158,31 @@ public class bendingScript : MonoBehaviour
         foreach (GameObject curr in currActionFieldCollisions)
         {
             float preferedDistance = 2f;
+
             Vector2 vectorPlayerToObj = ((Vector2)this.transform.position - (Vector2)curr.transform.position);
+            Vector2 direction = vectorPlayerToObj.normalized;
+            Vector2 posWhereObjShallMoveTo = direction * preferedDistance;
+
+            Vector2 calculatedVector = CalculateMoreDistanceIfObjectIsBigger(curr, posWhereObjShallMoveTo, 0.6f, 0.01f);
+
+            Vector2 actualspeed = (((Vector2)this.transform.position - posWhereObjShallMoveTo) + calculatedVector) - (Vector2)curr.transform.position;
+            Debug.Log($"calculatedVector: {calculatedVector},calculatedVector*-1f: {calculatedVector * -1f}");
+            Debug.DrawLine(this.transform.position,
+                (Vector2)this.transform.position - posWhereObjShallMoveTo,
+                Color.green, 0.1f);
+
+            Debug.DrawLine((Vector2)this.transform.position - posWhereObjShallMoveTo,
+                (Vector2)curr.transform.position,
+                Color.red, 0.1f);
+            Debug.DrawLine((Vector2)this.transform.position - posWhereObjShallMoveTo,
+                (((Vector2)this.transform.position - posWhereObjShallMoveTo) + calculatedVector),
+                Color.magenta, 0.1f);
+            Debug.DrawLine((Vector2)curr.transform.position,
+                (Vector2)curr.transform.position+actualspeed,
+                Color.magenta, 0.1f);
+            curr.GetComponent<Rigidbody2D>().velocity = actualspeed.normalized * 4f * MultiplierForObjectSlowDown(actualspeed.magnitude,0.1f,0.2f,false);
+
+            /*
 
             Debug.DrawLine(curr.transform.position,
                 (Vector2)curr.transform.position + vectorPlayerToObj, Color.red,
@@ -175,16 +199,16 @@ public class bendingScript : MonoBehaviour
             Debug.DrawLine(this.transform.position,
                 (Vector2)this.transform.position + direction * preferedDistance*-1f, Color.green,
                 0.1f);
-            Debug.DrawLine(this.transform.position,
-                (Vector2)this.transform.position + actualSpeed, Color.black,
+            Debug.DrawLine(curr.transform.position,
+                (Vector2)curr.transform.position + actualSpeed*-1f, Color.black,
                 0.1f);
-            direction *= 2f * actualSpeed.normalized * MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance-0.2f, preferedDistance-0.1f, true)*-1f;
+            direction *= 2f * actualSpeed.normalized *-1f;//; * MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance-0.2f, preferedDistance-0.1f, true);
             Debug.Log($"objectslowdown: {MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance - 0.2f, preferedDistance - 0.1f, true)}");
             Debug.DrawLine(curr.transform.position,
                 (Vector2)curr.transform.position + direction, Color.magenta,
                 0.1f);
-
-            curr.GetComponent<Rigidbody2D>().velocity = direction;
+            */
+            //curr.GetComponent<Rigidbody2D>().velocity =2f*-1f* (MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance - 0.2f, preferedDistance - 0.1f, true) * actualSpeed).normalized;
         }
     }
     private void PerformPullToMouseAttack()
@@ -219,7 +243,6 @@ public class bendingScript : MonoBehaviour
         //this mehtod takes the distance to an object and slows it down the more it comes to the inner Border. As soon as the outer Border is reached it slows the object down.
 
         float distBetweenBorders = outerBorderToObect - innerBorderToObject;
-
         //innerBorderToObject += ObjSize.magnitude;
         //outerBorderToObect += ObjSize.magnitude;
 
@@ -231,13 +254,14 @@ public class bendingScript : MonoBehaviour
         if (distanceToObject < outerBorderToObect)
         {
             float calcNumberInBorderSystem = distanceToObject - innerBorderToObject;
+            Debug.Log($"distaceTo Object: {distanceToObject}, calcNumberInBorderSystem {calcNumberInBorderSystem}, return: {calcNumberInBorderSystem / distBetweenBorders}");
             return calcNumberInBorderSystem / distBetweenBorders;
         }
         return 1;
     }
-    private Vector2 ExtendVectorViaBoundsFromObectInDirectionOfAntoherVector(Vector2 givenVector, GameObject givenObjectForBounds,Vector2 dirToExtend)
+    private Vector2 ExtendVectorViaBoundsFromObectInDirectionOfAntoherVector(Vector2 givenVector, GameObject givenObjectForBounds, Vector2 dirToExtend)
     {
-        float magOfObj = givenObjectForBounds.GetComponent<Collider2D>().bounds.size.magnitude/2;
+        float magOfObj = givenObjectForBounds.GetComponent<Collider2D>().bounds.size.magnitude / 2;
         Vector2 vecNorm = givenObjectForBounds.GetComponent<Collider2D>().bounds.size.normalized;
         Vector2 result = vecNorm * dirToExtend.normalized * magOfObj;
         result += givenVector;
