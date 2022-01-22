@@ -30,6 +30,9 @@ public class bendingScript : MonoBehaviour
     private bool _altMode1Active = false;
     private bool _pushAttackActive = false;
     private bool _pullAttackActive = false;
+
+    private float _speedForMovingObjects = 4f;
+    private float _safetyZoneRadiusAroundThePlayerRadius = 2f;
     [SerializeField]
     private GameObject _actionField;
     public Camera _cam;
@@ -155,73 +158,22 @@ public class bendingScript : MonoBehaviour
 
     private void PerformPullToPlayerAttack()
     {
+        //this method is for pulling lots of objects towards the player
         foreach (GameObject curr in currActionFieldCollisions)
         {
-            float preferedDistance = 2f;
-
+            //for each object we get the vector to the player
             Vector2 vectorPlayerToObj = ((Vector2)curr.transform.position - (Vector2)this.transform.position);
-            Vector2 direction = vectorPlayerToObj.normalized;
-            Vector2 posWhereObjShallMoveTo = direction * preferedDistance*-1f;
 
-            Vector2 calculatedVector = CalculateMoreDistanceIfObjectIsBigger(curr, posWhereObjShallMoveTo, 0.5f, 0.1f)*-1f;
+            //we want the objects to hover in a circle around the player.
+            //therfore we take the direction to the player and give it the length of the safety radius
+            Vector2 posWhereObjShallMoveTo = vectorPlayerToObj.normalized * _safetyZoneRadiusAroundThePlayerRadius * -1f;
 
+            //now we calculate 
+            Vector2 posWithSizeOfObjectCalculatedIn = CalculateMoreDistanceIfObjectIsBigger(curr, posWhereObjShallMoveTo, 0.5f, 0.1f) * -1f;
 
-            /*Debug.Log($"calculatedVector: {calculatedVector},calculatedVector*-1f: {calculatedVector * -1f}");
-            Debug.DrawLine(this.transform.position,
-                (Vector2)this.transform.position - posWhereObjShallMoveTo,
-                Color.green, 0.1f);*/
+            Vector2 actualspeed = (Vector2)this.transform.position - 2*(posWhereObjShallMoveTo) - posWithSizeOfObjectCalculatedIn - (Vector2)curr.transform.position;
 
-            Debug.DrawLine((Vector2)this.transform.position - posWhereObjShallMoveTo,
-                (Vector2)this.transform.position,
-                Color.green, 0.1f);
-
-            Debug.DrawLine((Vector2)this.transform.position,
-                (((Vector2)this.transform.position) + calculatedVector),
-                Color.blue, 0.1f);
-            Vector2 realDistance = ((Vector2)this.transform.position - posWhereObjShallMoveTo) - (((Vector2)this.transform.position) + calculatedVector);
-            
-            Debug.DrawLine((Vector2)curr.transform.position,
-                ((((Vector2)this.transform.position - posWhereObjShallMoveTo) + realDistance)),
-                Color.magenta, 0.1f);
-
-            //Vector2 actualspeed = (((Vector2)this.transform.position - posWhereObjShallMoveTo) + calculatedVector) - (Vector2)curr.transform.position;
-            Vector2 actualspeed = (((((Vector2)this.transform.position - posWhereObjShallMoveTo) + realDistance))-(Vector2)curr.transform.position);
-
-            /* Debug.DrawLine((Vector2)curr.transform.position,
-                 (Vector2)curr.transform.position+actualspeed,
-                 Color.blue, 0.1f);
-             Debug.DrawLine((Vector2)this.transform.position,
-                 (Vector2)curr.transform.position + actualspeed,
-                 Color.red, 0.1f);*/
-            curr.GetComponent<Rigidbody2D>().velocity = actualspeed.normalized * 4f * MultiplierForObjectSlowDown(actualspeed.magnitude,0.1f,0.2f,false);
-
-             /*
-
-             Debug.DrawLine(curr.transform.position,
-                 (Vector2)curr.transform.position + vectorPlayerToObj, Color.red,
-                 0.1f);
-
-             Vector2 direction = vectorPlayerToObj.normalized;
-
-             Debug.DrawLine(this.transform.position,
-                 (Vector2)this.transform.position - direction* preferedDistance, Color.blue,
-                 0.1f);
-
-             Vector2 actualSpeed = (Vector2)curr.transform.position - CalculateMoreDistanceIfObjectIsBigger(curr, direction * preferedDistance*-1f, 0.1f, 0.3f);
-
-             Debug.DrawLine(this.transform.position,
-                 (Vector2)this.transform.position + direction * preferedDistance*-1f, Color.green,
-                 0.1f);
-             Debug.DrawLine(curr.transform.position,
-                 (Vector2)curr.transform.position + actualSpeed*-1f, Color.black,
-                 0.1f);
-             direction *= 2f * actualSpeed.normalized *-1f;//; * MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance-0.2f, preferedDistance-0.1f, true);
-             Debug.Log($"objectslowdown: {MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance - 0.2f, preferedDistance - 0.1f, true)}");
-             Debug.DrawLine(curr.transform.position,
-                 (Vector2)curr.transform.position + direction, Color.magenta,
-                 0.1f);
-             */
-            //curr.GetComponent<Rigidbody2D>().velocity =2f*-1f* (MultiplierForObjectSlowDown(vectorPlayerToObj.magnitude, preferedDistance - 0.2f, preferedDistance - 0.1f, true) * actualSpeed).normalized;
+            curr.GetComponent<Rigidbody2D>().velocity = actualspeed.normalized * 4f * MultiplierForObjectSlowDown(actualspeed.magnitude, 0.1f, 0.2f, false);
         }
     }
     private void PerformPullToMouseAttack()
