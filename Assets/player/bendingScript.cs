@@ -143,14 +143,18 @@ public class bendingScript : MonoBehaviour
         //vector from the current stone to the player;
         Vector2 vectorToPlayer = (Vector2)objectToMove.gameObject.transform.position - (Vector2)this.transform.position;
 
+        //get the objects bounds size
         Vector2 objectBounds = objectToMove.GetComponent<Collider2D>().bounds.size;
 
         Vector2 addedBounds = (vectorToPlayer.normalized * objectBounds.magnitude) * distanceMultiplier;
-
+        
+        //get the position where the object shall move
         Vector2 posToMoveTo = vecFromThisPosToDestinationPos;
 
+        //add the bounds to the position to move
         Vector2 retVal = posToMoveTo + addedBounds;
 
+        //add a bit of height
         retVal.y += (yMultiplier * (objectBounds.y / 2));
 
         return retVal;
@@ -168,11 +172,15 @@ public class bendingScript : MonoBehaviour
             //therfore we take the direction to the player and give it the length of the safety radius
             Vector2 posWhereObjShallMoveTo = vectorPlayerToObj.normalized * _safetyZoneRadiusAroundThePlayerRadius * -1f;
 
-            //now we calculate 
-            Vector2 posWithSizeOfObjectCalculatedIn = CalculateMoreDistanceIfObjectIsBigger(curr, posWhereObjShallMoveTo, 0.5f, 0.1f) * -1f;
+            //now we calculate the new point where the object shall move to
+            //if the object is bigger it shall hover farther away
+            Vector2 posWithSizeOfObjectCalculatedIn = CalculateMoreDistanceIfObjectIsBigger(curr, posWhereObjShallMoveTo, 0.4f, 0.1f) * -1f;
 
+            //now calculate the speed
             Vector2 actualspeed = (Vector2)this.transform.position - 2*(posWhereObjShallMoveTo) - posWithSizeOfObjectCalculatedIn - (Vector2)curr.transform.position;
 
+            //set the veclocity to the calculated the point with a set speed. 
+            //it should also slow down if it gets near the point to avoid shaking
             curr.GetComponent<Rigidbody2D>().velocity = actualspeed.normalized * 4f * MultiplierForObjectSlowDown(actualspeed.magnitude, 0.1f, 0.2f, false);
         }
     }
@@ -223,15 +231,6 @@ public class bendingScript : MonoBehaviour
             return calcNumberInBorderSystem / distBetweenBorders;
         }
         return 1;
-    }
-    private Vector2 ExtendVectorViaBoundsFromObectInDirectionOfAntoherVector(Vector2 givenVector, GameObject givenObjectForBounds, Vector2 dirToExtend)
-    {
-        float magOfObj = givenObjectForBounds.GetComponent<Collider2D>().bounds.size.magnitude / 2;
-        Vector2 vecNorm = givenObjectForBounds.GetComponent<Collider2D>().bounds.size.normalized;
-        Vector2 result = vecNorm * dirToExtend.normalized * magOfObj;
-        result += givenVector;
-        Debug.Log($"givenVec:{givenVector}|originalBounds:{givenObjectForBounds.GetComponent<Collider2D>().bounds.size.magnitude}|result:{result}");
-        return result;
     }
     private void PerformStompAttack()
     {
