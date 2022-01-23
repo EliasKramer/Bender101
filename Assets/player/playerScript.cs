@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 public class playerScript : MonoBehaviour
 {
     public Rigidbody2D rb;
-    private float _speed = 1000f;
+    private float _speed = 5f;
     private float _speedInAirMultp = 0.75f;
     private float _jumpForce = 6.5f;
     private float _maxJumps = 2;
@@ -34,7 +34,7 @@ public class playerScript : MonoBehaviour
     {
         Move();
         //Debug.Log($"amout of jump: {_jumpsLeft}");
-        //PrintColliders();
+        PrintColliders();
     }
 
     private void PrintColliders()
@@ -83,32 +83,34 @@ public class playerScript : MonoBehaviour
     private void MoveAndJump()
     {
         float movementX = 0;
-        movementX = _inputDirectionFloat * _speed * Time.deltaTime;
+        movementX = _inputDirectionFloat * _speed;
         if (_jumpsLeft < _maxJumps)
         {
-            Debug.Log("airspeedmult active");
+            //Debug.Log("airspeedmult active");
             movementX *= _speedInAirMultp;
         }
 
-        if (_inputDirection == Direction.Right && isCollidingOnSide(Const.CollisionSide.Right))
+        if (_inputDirection == Direction.Right && isCollidingOnSide(Const.CollisionSide.Right) && !isCollidingOnSide(Const.CollisionSide.Down))
         {
             movementX = 0;
         }
-        if (_inputDirection == Direction.Left && isCollidingOnSide(Const.CollisionSide.Left))
+        if (_inputDirection == Direction.Left && isCollidingOnSide(Const.CollisionSide.Left) &&
+            !isCollidingOnSide(Const.CollisionSide.Down))
         {
             movementX = 0;
         }
         if ((isCollidingOnSide(Const.CollisionSide.Left) || isCollidingOnSide(Const.CollisionSide.Right)) && rb.velocity.y < _slidingSpeed)
         {
 
-            rb.velocity = new Vector2(rb.velocity.x, _slidingSpeed);
-
+            rb.velocity = new Vector2(movementX, _slidingSpeed);
         }
-        rb.velocity = new Vector2(movementX, rb.velocity.y);
-
+        else
+        {
+            rb.velocity = new Vector2(movementX, rb.velocity.y);
+        }
         if ((Mathf.Round(_inputVector.y) == 1) && _jumpsLeft > 0 && HasEnoughDelay())
         {
-            Debug.Log($"beforeJump jl: {_jumpsLeft}| afterjump jl: {_jumpsLeft}");
+            //Debug.Log($"beforeJump jl: {_jumpsLeft}| afterjump jl: {_jumpsLeft}");
             rb.velocity = new Vector2(0, _jumpForce);
             _jumpsLeft--;
         }
@@ -117,13 +119,14 @@ public class playerScript : MonoBehaviour
     {
         //Debug.Log($"inputthrough new system:{context.ReadValue<Vector2>()}");
         _inputVector = context.ReadValue<Vector2>();
+        Debug.Log($"input vec: {_inputVector}");
     }
     private bool HasEnoughDelay()
     {
         System.DateTime startTime = System.DateTime.Now;
         if ((startTime - _lastTimePressed).TotalMilliseconds >= _minDelayBetweenJumpsInMs)
         {
-            Debug.Log($"delay = {(startTime - _lastTimePressed).TotalMilliseconds}|jl:{_jumpsLeft}");
+            //Debug.Log($"delay = {(startTime - _lastTimePressed).TotalMilliseconds}|jl:{_jumpsLeft}");
             _lastTimePressed = startTime;
             return true;
         }

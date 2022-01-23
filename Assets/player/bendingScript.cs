@@ -106,15 +106,6 @@ public class bendingScript : MonoBehaviour
 
                 Vector2 posToMoveTo = CalculateMoreDistanceIfObjectIsBigger(currObj, sidePointsForHoveringStones[i], 0.25f, 0.3f);
 
-                /*Vector2 debugPos = currObj.transform.position;
-                debugPos.y -= (currObj.GetComponent<Collider2D>().bounds.size.y/2);
-
-                Debug.DrawLine(currObj.transform.position,
-                   debugPos,
-                   Color.magenta, 0.5f);*/
-
-                //posToMoveTo.y += (addedBounds.y / 1.5f);
-
                 //vector from the current stone to the hover position
                 Vector2 vectorToPoint = vectorObjPos - ((Vector2)this.transform.position + posToMoveTo);
 
@@ -137,7 +128,6 @@ public class bendingScript : MonoBehaviour
             }
         }
     }
-
     private Vector2 CalculateMoreDistanceIfObjectIsBigger(GameObject objectToMove, Vector2 vecFromThisPosToDestinationPos, float distanceMultiplier, float yMultiplier)
     {
         //vector from the current stone to the player;
@@ -159,7 +149,6 @@ public class bendingScript : MonoBehaviour
 
         return retVal;
     }
-
     private void PerformPullToPlayerAttack()
     {
         //this method is for pulling lots of objects towards the player
