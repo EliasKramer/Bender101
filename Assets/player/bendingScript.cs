@@ -9,7 +9,7 @@ public class bendingScript : MonoBehaviour
     private List<GameObject> actualPlayerCollisions;
 
     private float mouseSmoothingInnerBorder = 0.1f;
-    private float mouseSmoothingOuterBorder = 1f;
+    private float mouseSmoothingOuterBorder = 3f;
 
 
     private System.DateTime _lastTimeStompAttack;
@@ -31,8 +31,9 @@ public class bendingScript : MonoBehaviour
     private bool _pushAttackActive = false;
     private bool _pullAttackActive = false;
 
-    private float _speedForMovingObjects = 4f;
-    private float _safetyZoneRadiusAroundThePlayerRadius = 2f;
+    static private float _speedForMovingObjects = 4f;
+    static private float _innerSafetyZoneRadiusAroundThePlayerRadius = 2f;
+    static private float _outerSafetyZoneRadiusAroundThePlayerRadius = _innerSafetyZoneRadiusAroundThePlayerRadius + 0.2f;
     [SerializeField]
     private GameObject _actionField;
     public Camera _cam;
@@ -137,7 +138,7 @@ public class bendingScript : MonoBehaviour
         Vector2 objectBounds = objectToMove.GetComponent<Collider2D>().bounds.size;
 
         Vector2 addedBounds = (vectorToPlayer.normalized * objectBounds.magnitude) * distanceMultiplier;
-        
+
         //get the position where the object shall move
         Vector2 posToMoveTo = vecFromThisPosToDestinationPos;
 
@@ -159,14 +160,14 @@ public class bendingScript : MonoBehaviour
 
             //we want the objects to hover in a circle around the player.
             //therfore we take the direction to the player and give it the length of the safety radius
-            Vector2 posWhereObjShallMoveTo = vectorPlayerToObj.normalized * _safetyZoneRadiusAroundThePlayerRadius * -1f;
+            Vector2 posWhereObjShallMoveTo = vectorPlayerToObj.normalized * _innerSafetyZoneRadiusAroundThePlayerRadius * -1f;
 
             //now we calculate the new point where the object shall move to
             //if the object is bigger it shall hover farther away
             Vector2 posWithSizeOfObjectCalculatedIn = CalculateMoreDistanceIfObjectIsBigger(curr, posWhereObjShallMoveTo, 0.4f, 0.1f) * -1f;
 
             //now calculate the speed
-            Vector2 actualspeed = (Vector2)this.transform.position - 2*(posWhereObjShallMoveTo) - posWithSizeOfObjectCalculatedIn - (Vector2)curr.transform.position;
+            Vector2 actualspeed = (Vector2)this.transform.position - 2 * (posWhereObjShallMoveTo) - posWithSizeOfObjectCalculatedIn - (Vector2)curr.transform.position;
 
             //set the veclocity to the calculated the point with a set speed. 
             //it should also slow down if it gets near the point to avoid shaking
@@ -177,28 +178,149 @@ public class bendingScript : MonoBehaviour
     {
         foreach (GameObject curr in currActionFieldCollisions)
         {
-            Vector2 distanceClickedObj = (_worldPointWhereClicked - (Vector2)curr.transform.position);
-            Vector2 actualSpeedVec = distanceClickedObj.normalized; // give direction
 
-            Vector2 distanceObjPlayer = ((Vector2)this.transform.position - (Vector2)curr.transform.position);
+            /*
+            Vector2 vectorColliderDistance = colliderDistance.pointB - colliderDistance.pointA;
 
-            float dotMovement = Vector2.Dot(distanceClickedObj, distanceObjPlayer); //if > 0 = moving to player
-            bool isMovingToPlayer = dotMovement > 0;
 
-            actualSpeedVec *= 5f; // setting the speed
 
-            if (isMovingToPlayer)
+            float distanceToFloatOver = 1.5f;
+
+
+            actualSpeedVec *= _speedForMovingObjects; // setting the speed
+
+            bool isMoving90DegMode = false;
+            //---
+            if (speedMultForPlayerDistance > distanceToFloatOver) // if it slows down more than half then it should apply a force in a 90° angle of the current distance to the player. so it moves around the player
             {
-                float innerBorderPlayer = 2f;
-                float outerBorderPlayer = 2.2f;
-
-                float speedMultForPlayerDistance = MultiplierForObjectSlowDown(distanceObjPlayer.magnitude, innerBorderPlayer, outerBorderPlayer, false); //between 1 and 0
-
                 actualSpeedVec *= speedMultForPlayerDistance;
+                Debug.Log("point 1");
             }
-            actualSpeedVec *= MultiplierForObjectSlowDown(distanceClickedObj.magnitude, mouseSmoothingInnerBorder, mouseSmoothingOuterBorder, false);
-            curr.GetComponent<Rigidbody2D>().velocity = actualSpeedVec;
+            else
+            {
+                Vector2 rightAngleVec = new Vector2();
+                rightAngleVec.x = vecPlayerObj.y;
+                rightAngleVec.y = vecPlayerObj.x;
+                bool mouseIsOnTheOppositeSideOfTheCurrentObject = true;
+                if (vecPlayerObj.x > 0 && distanceClickedPlayer.x < 0)
+                {
+                    rightAngleVec.x *= -1f;
+
+                }
+                else if (vecPlayerObj.x <= 0 && distanceClickedPlayer.x >= 0)
+                {
+                    rightAngleVec.y *= -1f;
+                }
+                else
+                {
+                    mouseIsOnTheOppositeSideOfTheCurrentObject = false;
+                    actualSpeedVec *= speedMultForPlayerDistance;
+                }
+
+                if (mouseIsOnTheOppositeSideOfTheCurrentObject)
+                {
+                    actualSpeedVec = rightAngleVec.normalized * _speedForMovingObjects;
+
+                    Debug.DrawLine(curr.transform.position,
+                     (Vector2)curr.transform.position + rightAngleVec,
+                     Color.green, 0.1f);
+                    isMoving90DegMode = true;
+
+                }
+            }
+            //---
+
+
+
+            //if(!isMovingToPlayer || !isMoving90DegMode)
+            //{
+                actualSpeedVec *= MultiplierForObjectSlowDown(distanceClickedObj.magnitude, mouseSmoothingInnerBorder, mouseSmoothingOuterBorder, false);
+
+                Debug.DrawLine(curr.transform.position,
+                 (Vector2)curr.transform.position + actualSpeedVec,
+                 Color.red, 0.1f);
+                Debug.Log("point 7");
+            //}
+            */
+            ///---------------------------------------------------- new try. clean -------------------------------------------------------------------
+            
+            // get the inital vector where the object shall head to
+            Vector2 distanceClickedObj = (_worldPointWhereClicked - (Vector2)curr.transform.position);
+
+            //this will be used later to determin wether you clicked left or right in relation to the player
+            Vector2 distanceClickedPlayer = (Vector2)this.transform.position - _worldPointWhereClicked;
+
+            // this will be the speed we will apply later. Before that we give it the general direction it shall head to.
+            Vector2 actualSpeedVec = distanceClickedObj.normalized; 
+            
+            // this is the distance between the two collider. first is the player and second is the object we are trying to move
+            // it will be important later. as we try to get around the player if the destination is on the other side
+            float colliderDistance = Physics2D.Distance(this.GetComponent<Collider2D>(), curr.GetComponent<Collider2D>()).distance;
+
+            // the distance where the objects shall start to move around the player
+            float distanceWhereObjectsShallStartToGoAroundPlayer = (_outerSafetyZoneRadiusAroundThePlayerRadius - _innerSafetyZoneRadiusAroundThePlayerRadius) / 2;
+
+            // is important later for calculating the angle for the vector for moving around the player
+            Vector2 vecPlayerObj = ((Vector2)this.transform.position - (Vector2)curr.transform.position);
+
+
+            // as soon as the distance from the object to the player is less than the distance where it shall start to move around the player
+            // it shall move around the player
+            if (colliderDistance <= distanceWhereObjectsShallStartToGoAroundPlayer)
+            {
+                //in order to calculate a vector that is 90° turned it must first switch the x and y values
+                Vector2 rightAngleVec = new Vector2();
+                rightAngleVec.x = vecPlayerObj.y;
+                rightAngleVec.y = vecPlayerObj.x;
+
+                // to finally get a 90° of a vector you must multiply one of your values by -1. 
+                // depending on where you do it, the vector will go left or right (90°)
+                // for example: if the point where we want to move is on the left and the current obj is on the right,
+                //              it shall move 90° up
+                if (vecPlayerObj.x > 0 && distanceClickedPlayer.x < 0)
+                {
+                    rightAngleVec.x *= -1f;
+
+                }
+                else if (vecPlayerObj.x <= 0 && distanceClickedPlayer.x >= 0)
+                {
+                    rightAngleVec.y *= -1f;
+                }
+
+                //then we apply the right angled vector as our direction where our speed shall go
+                actualSpeedVec = rightAngleVec.normalized;
+            }
+
+            //now we apply a velocity to our direction
+            actualSpeedVec *= _speedForMovingObjects;
+
+            //applying the velocity and slowing it down if it goes towards the player.
+            curr.GetComponent<Rigidbody2D>().velocity = actualSpeedVec;// GetSpeedWithAntiPlayerCollision(curr,actualSpeedVec,true);
         }
+    }
+    private Vector2 GetSpeedWithAntiPlayerCollision(GameObject obj, Vector2 speedVecTryingToApply, bool allowNegativeSpeed)
+    {
+        ///this method will reduce the speed we try to apply to an object, if it comes near the player.
+
+        Vector2 distanceClickedObj = (Vector2)obj.transform.position + speedVecTryingToApply;
+        Vector2 distanceObjPlayer = this.transform.position - obj.transform.position;
+
+        float colliderDistance = Physics2D.Distance(this.GetComponent<Collider2D>(), obj.GetComponent<Collider2D>()).distance;
+
+        float angleToPlayer = Vector2.Angle(distanceClickedObj, distanceObjPlayer); //if > 0 = moving to player
+
+        bool isMovingToPlayer = angleToPlayer < 70; //could be one more precisely this is a lil guesswork
+        if (isMovingToPlayer)
+        {
+            float speedMultForPlayerDistance = MultiplierForObjectSlowDown(
+                colliderDistance,
+                _innerSafetyZoneRadiusAroundThePlayerRadius,
+                _outerSafetyZoneRadiusAroundThePlayerRadius,
+                allowNegativeSpeed);
+
+            return speedVecTryingToApply * speedMultForPlayerDistance;
+        }
+        return speedVecTryingToApply;
     }
     private float MultiplierForObjectSlowDown(float distanceToObject, float innerBorderToObject, float outerBorderToObect, bool neagativeSpeedForObject)
     {
@@ -216,7 +338,7 @@ public class bendingScript : MonoBehaviour
         if (distanceToObject < outerBorderToObect)
         {
             float calcNumberInBorderSystem = distanceToObject - innerBorderToObject;
-            Debug.Log($"distaceTo Object: {distanceToObject}, calcNumberInBorderSystem {calcNumberInBorderSystem}, return: {calcNumberInBorderSystem / distBetweenBorders}");
+            //Debug.Log($"distaceTo Object: {distanceToObject}, calcNumberInBorderSystem {calcNumberInBorderSystem}, return: {calcNumberInBorderSystem / distBetweenBorders}");
             return calcNumberInBorderSystem / distBetweenBorders;
         }
         return 1;
@@ -249,9 +371,9 @@ public class bendingScript : MonoBehaviour
                 {
                     speedVec = (_worldPointWhereClicked - (Vector2)curr.transform.position).normalized;
                 }
-                speedVec *= 100f;
-                speedVec.y *= 0.5f;
-                curr.GetComponent<Rigidbody2D>().AddForce(speedVec, ForceMode2D.Impulse);
+                speedVec *= 25f;
+                speedVec.y *= 0.2f;
+                curr.GetComponent<Rigidbody2D>().velocity += speedVec;
             }
             _pushAttackDelayIsEnough = false;
         }

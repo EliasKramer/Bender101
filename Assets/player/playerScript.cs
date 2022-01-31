@@ -34,7 +34,7 @@ public class playerScript : MonoBehaviour
     {
         Move();
         //Debug.Log($"amout of jump: {_jumpsLeft}");
-        PrintColliders();
+        //PrintColliders();
     }
 
     private void PrintColliders()
