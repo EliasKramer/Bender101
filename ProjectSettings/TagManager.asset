@@ -6,10 +6,8 @@ TagManager:
   tags:
   - Environment
   - Obstacle
-  - TopObstacleTag
-  - BottomObstacleTag
-  - LeftObstacleTag
-  - RightObstacleTag
+  - Stone
+  - ActionField
   layers:
   - Default
   - TransparentFX
