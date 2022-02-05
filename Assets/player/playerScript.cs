@@ -2,122 +2,133 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class playerScript : MonoBehaviour
 {
+    /// <summary>
+    /// physic simulation 
+    /// </summary>
     public Rigidbody2D rb;
-    private float _speed = 222.0f;
-    private float _speedInAirMultp = 0.5f;
-    private float _jumpForce = 150f;
-    public float _sideJumpForce = 20f;
-    public float _sideJumpYForceMult = 0.2f;
-    private bool _isOnGround = true;
-    public bool _isCollidingWithHead = false;
-    private bool _touchingWallLeft = false;
-    private bool _touchingWallRight = false;
-    private bool _isSlidingOnWall = false;
+    /// <summary>
+    /// the speed of the character 
+    /// </summary>
+    private float _speed = 5f;
+    /// <summary>
+    /// the amout the speed is multiplied if the character is in the air
+    /// </summary>
+    private float _speedInAirMultp = 0.75f;
+    /// <summary>
+    /// the force the player jumps with
+    /// </summary>
+    private float _jumpForce = 6.5f;
+    /// <summary>
+    /// the max amount of jumps in the air
+    /// </summary>
+    private short _maxJumps = 2;
+    /// <summary>
+    /// the amount of jumps currently left to the player while in air
+    /// </summary>
+    private short _jumpsLeft;
+    /// <summary>
+    /// is set to true if something is colliding with the players head
+    /// </summary>
+    private bool _isCollidingWithHead = false;
+    /// <summary>
+    /// the direction the player is facing
+    /// </summary>
     private Direction _inputDirection = Direction.Right;
+    /// <summary>
+    /// 
+    /// </summary>
     private float _inputDirectionFloat = 1; //is between -1 and 1: 1 is right -1 left
-    public float _visualDirectionFloat = 1;
-    //List<Collision2D> currentCollisions = new List<Collision2D>();
+    /// <summary>
+    /// array of collisions on all sides
+    /// </summary>
+    private bool[] allCollisions = new bool[4];
+    /// <summary>
+    /// is set to the last time something was pressed
+    /// </summary>
+    private System.DateTime _lastTimePressed;
+    /// <summary>
+    /// is the mininum of delay 
+    /// </summary>
+    private float _minDelayBetweenJumpsInMs = 300;
+    private Vector2 _inputVector;
+    private float _slidingSpeed = -0.5f;
 
+
+    /// <summary>
+    /// gets called when the game is updated
+    /// </summary>
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.velocity = new Vector2(0, 0);
+        _jumpsLeft = _maxJumps;
+        _lastTimePressed = System.DateTime.UtcNow;
+        _inputVector = new Vector2(0, 0);
     }
 
-    // Update is called once per frame
+
+    /// <summary>
+    ///  update is called to update the current state of the player. It is called once per frame
+    /// </summary>
     void Update()
     {
         Move();
-        CheckWhereCollisionsAre();
+        //Debug.Log($"amout of jump: {_jumpsLeft}");
+        //PrintColliders();
     }
-    private void FixedUpdate()
+
+
+    private void PrintColliders()
     {
-        _touchingWallLeft = false;
-        _touchingWallRight = false;
-        _isCollidingWithHead = false;
-        _isOnGround = false;
+        Debug.Log($"up:{isCollidingOnSide(Const.CollisionSide.Up)}|down:{isCollidingOnSide(Const.CollisionSide.Down)}|left:{isCollidingOnSide(Const.CollisionSide.Left)}|right:{isCollidingOnSide(Const.CollisionSide.Right)}");
     }
-    /*
-    void OnCollisionEnter2D(Collision2D col)
+
+
+    /// <summary>
+    /// Checks if the player is colliding with a side
+    /// </summary>
+    /// <param name="side">the side to be checked</param>
+    /// <returns>true if the two objects are colliding</returns>
+    public bool isCollidingOnSide(Const.CollisionSide side)
     {
-        //currentCollisions.Add(col);
+        return allCollisions[(int)side];
     }
-    */
-    void OnCollisionExit2D(Collision2D col)
+
+    /// <summary>
+    /// a method which is called by childcollider to update the current collides
+    /// </summary>
+    /// <param name="val">if the collision is wanted to be added this should be true else the collision will get removed</param>
+    /// <param name="side">the side the collision is on</param>
+    public void CollisionUpdateByChildCollider(bool val, Const.CollisionSide side)
     {
-        Debug.Log("collision exit" + col.gameObject);
-        //currentCollisions.Remove(col);
-    }
-    private void collHelper(Collision2D collision)
-    {
-        String output = "";
-        //BottomObstacleTag
-        //TopObstacleTag
-        //LeftObstacleTag
-        //RightObstacleTag
-        switch (collision.gameObject.tag)
+        allCollisions[(int)side] = val;
+        if (val && side == Const.CollisionSide.Down)
         {
-            case "BottomObstacleTag":
-                _isCollidingWithHead = true;
-                output += "top, ";
-                break;
-            case "TopObstacleTag":
-                _isOnGround = true;
-                output += "bottom, ";
-                break;
-            case "LeftObstacleTag":
-                output += "right, ";
-                _touchingWallRight = true;
-                break;
-            case "RightObstacleTag":
-                output += "left, ";
-                _touchingWallLeft = true;
-                break;
+            _jumpsLeft = _maxJumps;
         }
-        Debug.Log(output + collision.gameObject.name);
-        Debug.Log($"nach coll l:{_touchingWallLeft}|r:{_touchingWallRight}|o:{_isCollidingWithHead}|u:{_isOnGround}");
+        //Debug.Log($"")
     }
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        collHelper(collision);
-    }
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        collHelper(collision);
 
-    }
-    private void CheckWhereCollisionsAre()
-    {
-
-    }
+    /// <summary>
+    /// a method which allows the player to move
+    /// </summary>
     void Move()
     {
         GetDirection();
-        MoveHorizontal();
-        SlideDown();
-        Debug.Log($"nach move l:{_touchingWallLeft}|r:{_touchingWallRight}|o:{_isCollidingWithHead}|u:{_isOnGround}");
-
+        MoveAndJump();
     }
-
-    private void SlideDown()
-    {
-        if (_isSlidingOnWall && rb.velocity.y <= 0)
-        {
-            rb.gravityScale = 0.1f;
-        }
-        else
-        {
-            rb.gravityScale = 1f;
-        }
-    }
-
+    /// <summary>
+    /// gets the direction the placer is facing
+    /// </summary>
     private void GetDirection()
     {
-        _inputDirectionFloat = Input.GetAxis("Horizontal");
-
+        //Debug.Log($"dirvec: {_inputVector}");
+        //Debug.Log($"dirvec: {Mathf.Round(_inputVector.x)}");
+        _inputDirectionFloat = Mathf.Round(_inputVector.x);//Input.GetAxis("Horizontal");
         if (_inputDirectionFloat < 0)
         {
             _inputDirection = Direction.Left;
@@ -126,44 +137,76 @@ public class playerScript : MonoBehaviour
         {
             _inputDirection = Direction.Right;
         }
-
     }
 
-    private void MoveHorizontal()
+    /// <summary>
+    /// Does all tge movement thingies
+    /// </summary>
+    private void MoveAndJump()
     {
         float movementX = 0;
-        if (_touchingWallLeft && _inputDirection == Direction.Left)
+        movementX = _inputDirectionFloat * _speed;
+        if (_jumpsLeft < _maxJumps)
         {
-            _isSlidingOnWall = true;
+            //Debug.Log("airspeedmult active");
+            movementX *= _speedInAirMultp;
         }
-        else if (_touchingWallRight && _inputDirection == Direction.Right)
+
+        if (_inputDirection == Direction.Right && isCollidingOnSide(Const.CollisionSide.Right) && !isCollidingOnSide(Const.CollisionSide.Down))
         {
-            _isSlidingOnWall = true;
+            movementX = 0;
+        }
+        if (_inputDirection == Direction.Left && isCollidingOnSide(Const.CollisionSide.Left) &&
+            !isCollidingOnSide(Const.CollisionSide.Down))
+        {
+            movementX = 0;
+        }
+        if ((isCollidingOnSide(Const.CollisionSide.Left) || isCollidingOnSide(Const.CollisionSide.Right)) && rb.velocity.y < _slidingSpeed)
+        {
+
+            rb.velocity = new Vector2(movementX, _slidingSpeed);
         }
         else
         {
-            _isSlidingOnWall = false;
-            movementX = _inputDirectionFloat * _speed * Time.deltaTime;
-            if (_isOnGround)
-            {
-                rb.velocity = new Vector2(movementX, rb.velocity.y);
-            }
+            rb.velocity = new Vector2(movementX, rb.velocity.y);
         }
-
-        if (Input.GetButton("Jump") && !_isCollidingWithHead)
+        if ((Mathf.Round(_inputVector.y) == 1) && _jumpsLeft > 0 && HasEnoughDelay())
         {
-            if (_isSlidingOnWall)
-            {
-                rb.AddForce(new Vector2(_sideJumpForce * (_inputDirectionFloat * -1), _jumpForce * _sideJumpYForceMult));
-                _isSlidingOnWall = false;
-            }
-            else if (_isOnGround)
-            {
-                rb.AddForce(new Vector2(0, _jumpForce));
-                _isOnGround = false;
-            }
+            //Debug.Log($"beforeJump jl: {_jumpsLeft}| afterjump jl: {_jumpsLeft}");
+            rb.velocity = new Vector2(0, _jumpForce);
+            _jumpsLeft--;
         }
     }
+
+
+
+    public void MoveAction(InputAction.CallbackContext context)
+    {
+        //Debug.Log($"inputthrough new system:{context.ReadValue<Vector2>()}");
+        _inputVector = context.ReadValue<Vector2>();
+        Debug.Log($"input vec: {_inputVector}");
+    }
+
+
+    /// <summary>
+    /// Check if enough delay has passed 
+    /// </summary>
+    /// <returns>True(if enough delay has passed)</returns>
+    private bool HasEnoughDelay()
+    {
+        System.DateTime startTime = System.DateTime.Now;
+        if ((startTime - _lastTimePressed).TotalMilliseconds >= _minDelayBetweenJumpsInMs)
+        {
+            //Debug.Log($"delay = {(startTime - _lastTimePressed).TotalMilliseconds}|jl:{_jumpsLeft}");
+            _lastTimePressed = startTime;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// an enum for directions
+    /// </summary>
     enum Direction
     {
         Right,

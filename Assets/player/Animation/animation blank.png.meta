@@ -1,0 +1,360 @@
+fileFormatVersion: 2
+guid: 83c7316467e56ba4f94b7dcfe000690a
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 11
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: animation blank_0
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 347
+        width: 32
+        height: 73
+      alignment: 9
+      pivot: {x: 0.7810309, y: 0.8079788}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2c54c9a6e364c7b4b900404e55ed37f4
+      internalID: 1729952022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_1
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 414
+        width: 56
+        height: 72
+      alignment: 9
+      pivot: {x: 0.5374708, y: 0.058676824}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b9c3ebf5fe1b34d4cb745add663935be
+      internalID: 1862928570
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_2
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 343
+        width: 31
+        height: 72
+      alignment: 9
+      pivot: {x: 0.17122379, y: 0.79560256}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d6201742a998954f9e020cc2c4b037c
+      internalID: -1595348491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_7
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 231
+        width: 30
+        height: 79
+      alignment: 9
+      pivot: {x: 0.4472121, y: 0.9276486}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b3293e6d990a1c74d8ab8157132e4fd8
+      internalID: 1211796342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_9
+      rect:
+        serializedVersion: 2
+        x: 182
+        y: 246
+        width: 30
+        height: 75
+      alignment: 9
+      pivot: {x: 0.39442393, y: 0.9082263}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 269ed7d8ecd34a84488828e9f6a5688e
+      internalID: 1117063375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_10
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 136
+        width: 45
+        height: 70
+      alignment: 9
+      pivot: {x: 0.464808, y: 0.89967954}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 98c0b094a1e515140a1f4cf82076a298
+      internalID: 565364005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_13
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 135
+        width: 44
+        height: 70
+      alignment: 9
+      pivot: {x: 0.52399445, y: 0.88459736}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa5f08bf46b46d84aba94f33ae344f57
+      internalID: 1043162318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_14
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 46
+        width: 41
+        height: 85
+      alignment: 9
+      pivot: {x: 0.628751, y: 0.88504094}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d0bc405cf67c8045b616a41cd40a5ee
+      internalID: -1187813360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_15
+      rect:
+        serializedVersion: 2
+        x: 126
+        y: 47
+        width: 40
+        height: 86
+      alignment: 9
+      pivot: {x: 0.39442405, y: 0.8928399}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b03823bdc57b18944826bd4b1999327f
+      internalID: -1476663930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: animation blank_3
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 257
+        width: 72
+        height: 144
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e5cf216af54b0a4dad79aa0fe18c37c
+      internalID: 198431376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      animation blank_6: 106560210
+      animation blank_3: 198431376
+      animation blank_4: 734555018
+      animation blank_7: 1211796342
+      animation blank_1: 1862928570
+      animation blank_8: -195478256
+      animation blank_2: -1595348491
+      animation blank_13: 1043162318
+      animation blank_0: 1729952022
+      animation blank_15: -1476663930
+      animation blank_14: -1187813360
+      animation blank_5: 1668827182
+      animation blank_9: 1117063375
+      animation blank_11: -2013909894
+      animation blank_10: 565364005
+      animation blank_12: 427138841
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
