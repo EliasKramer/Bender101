@@ -11,25 +11,20 @@ public class bendingScript : MonoBehaviour
     private float mouseSmoothingInnerBorder = 0.1f;
     private float mouseSmoothingOuterBorder = 3f;
 
+    private float _stompDelayInMs = 400f;
+    private float _timeForHover = 200f;
+    private Delay _stompDelay;
 
-    private System.DateTime _lastTimeStompAttack;
-    private float _stompAttackMinDelayInMs = 500f;
-    private bool _stompAttackDelayIsEnough = true;
     private float _forceForStone = 6f;
 
-    private System.DateTime _lastTimePushAttack;
-    private float _pushAttackMinDelay = 500f;
-    private bool _pushAttackDelayIsEnough = true;
+    private float _pushDelayInMs = 500f;
+    private Delay _pushDelay;
 
-    private System.DateTime _lastTimeStompAttackAttempt;
-    private float _durationBeforeStompAttackGetsHoverAttack = 200f;
-    private bool _stompIsHover = false;
+    private float _pullDelayInMs = 500f;
+    private Delay _pullDelay;
 
-    private bool _jumpButtonIsDown = false;
     private Vector2 _worldPointWhereClicked;
     private bool _altMode1Active = false;
-    private bool _pushAttackActive = false;
-    private bool _pullAttackActive = false;
 
     static private float _speedForMovingObjects = 4f;
     static private float _innerSafetyZoneRadiusAroundThePlayerRadius = 2f;
@@ -40,38 +35,26 @@ public class bendingScript : MonoBehaviour
     void Start()
     {
         currActionFieldCollisions = new List<GameObject>();
-        _lastTimeStompAttack = DateTime.UtcNow;
         actualPlayerCollisions = new List<GameObject>();
+
+        _stompDelay = new Delay(_stompDelayInMs, false);
+        _pushDelay = new Delay(_pushDelayInMs, false);
+        _pullDelay = new Delay(_pullDelayInMs, false);
+
     }
     void Update()
     {
-        CheckDelays();
         PerformAttacks();
-    }
-    private void CheckDelays()
-    {
-        System.DateTime now = DateTime.UtcNow;
-        if (!_stompAttackDelayIsEnough && ((now - _lastTimeStompAttack).TotalMilliseconds >= _stompAttackMinDelayInMs))
-        {
-            _lastTimeStompAttack = now;
-            _stompAttackDelayIsEnough = true;
-        }
-        if (!_pushAttackDelayIsEnough && ((now - _lastTimePushAttack).TotalMilliseconds >= _pushAttackMinDelay))
-        {
-            _lastTimePushAttack = now;
-            _pushAttackDelayIsEnough = true;
-        }
-        _stompIsHover = (DateTime.UtcNow - _lastTimeStompAttackAttempt).TotalMilliseconds > _durationBeforeStompAttackGetsHoverAttack;
     }
     private void PerformAttacks()
     {
         _worldPointWhereClicked = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
 
-        if (_jumpButtonIsDown && _stompIsHover && !_pullAttackActive && !_pushAttackActive)
+        if (_stompDelay.IsDoingAction && (_stompDelay.ActionDurationInMs > _timeForHover) && !_pullDelay.IsDoingAction && !_pushDelay.IsDoingAction)
         {
             PerformHoverAttack();
         }
-        else if (!_pushAttackActive && _pullAttackActive)
+        else if (!_pushDelay.IsDoingAction && _pullDelay.IsDoingAction)
         {
             if (!_altMode1Active)
             {
@@ -289,7 +272,7 @@ public class bendingScript : MonoBehaviour
         float angleToBorder = Vector2.Angle(vecObjToSlowDownBorder, vecPlayerObject);
 
         //if the object would continue this path it would hit the player, so we slow it down
-        if (angleToPlayer > angleToBorder) 
+        if (angleToPlayer > angleToBorder)
         {
             //the distance between the tow colliders
             float colliderDistance = Physics2D.Distance(this.GetComponent<Collider2D>(), obj.GetComponent<Collider2D>()).distance;
@@ -347,74 +330,76 @@ public class bendingScript : MonoBehaviour
     }
     private void PerformStompAttack()
     {
-        if (_stompAttackDelayIsEnough && !_stompIsHover)
+        if (!(_stompDelay.ActionDurationInMs > _timeForHover))
         {
-            foreach (GameObject curr in currActionFieldCollisions)
+            if (_stompDelay.IsDoingAction)
             {
-                curr.GetComponent<Rigidbody2D>().velocity = new Vector2(0, _forceForStone);
+                foreach (GameObject curr in currActionFieldCollisions)
+                {
+                    curr.GetComponent<Rigidbody2D>().velocity = new Vector2(0, _forceForStone);
+                }
             }
-            _stompAttackDelayIsEnough = false;
         }
     }
     private void PerformRegularPushAttack()
     {
         _worldPointWhereClicked = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        if (_pushAttackDelayIsEnough && !_pullAttackActive)
+        if (!_pullDelay.IsDoingAction)
         {
-            foreach (GameObject curr in currActionFieldCollisions)
+            if (_pushDelay.IsDoingAction)
             {
-                Vector2 speedVec;
-                if (!_altMode1Active)
+                foreach (GameObject curr in currActionFieldCollisions)
                 {
-                    speedVec = (_worldPointWhereClicked - (Vector2)this.transform.position).normalized;
+                    Vector2 speedVec;
+                    if (!_altMode1Active)
+                    {
+                        speedVec = (_worldPointWhereClicked - (Vector2)this.transform.position).normalized;
 
+                    }
+                    else
+                    {
+                        speedVec = (_worldPointWhereClicked - (Vector2)curr.transform.position).normalized;
+                    }
+                    speedVec *= 25f;
+                    speedVec.y *= 0.2f;
+                    curr.GetComponent<Rigidbody2D>().velocity += speedVec;
                 }
-                else
-                {
-                    speedVec = (_worldPointWhereClicked - (Vector2)curr.transform.position).normalized;
-                }
-                speedVec *= 25f;
-                speedVec.y *= 0.2f;
-                curr.GetComponent<Rigidbody2D>().velocity += speedVec;
             }
-            _pushAttackDelayIsEnough = false;
         }
     }
-    public void JumpButtonAction(InputAction.CallbackContext context)
+    public void StompAttack(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            _lastTimeStompAttackAttempt = DateTime.UtcNow;
-            _jumpButtonIsDown = true;
+            _stompDelay.StartAction();
         }
         if (context.canceled)
         {
-            _jumpButtonIsDown = false;
             PerformStompAttack();
-
+            _stompDelay.StopAction();
         }
     }
     public void PushAttack(InputAction.CallbackContext context)
     {
         if (context.performed) //taste unten
         {
-            _pushAttackActive = true;
+            _pushDelay.StartAction();
         }
         if (context.canceled) // taste wieder oben
         {
-            _pushAttackActive = false;
             PerformRegularPushAttack();
+            _pushDelay.StopAction();
         }
     }
     public void PullAttack(InputAction.CallbackContext context)
     {
         if (context.performed) //taste unten
         {
-            _pullAttackActive = true;
+            _pullDelay.StartAction();
         }
         if (context.canceled) // taste wieder oben
         {
-            _pullAttackActive = false;
+            _pullDelay.StopAction();
         }
     }
     public void AltMode1(InputAction.CallbackContext context)

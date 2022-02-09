@@ -2867,7 +2867,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1163116043}
         m_TargetAssemblyTypeName: bendingScript, Assembly-CSharp
-        m_MethodName: JumpButtonAction
+        m_MethodName: StompAttack
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
