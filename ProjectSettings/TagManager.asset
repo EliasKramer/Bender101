@@ -4,10 +4,10 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Environment
   - Obstacle
   - Stone
   - ActionField
+  - TopObstacleTag
   layers:
   - Default
   - TransparentFX
@@ -44,4 +44,22 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 2918128419
+    locked: 0
+  - name: Deco
+    uniqueID: 1420516431
+    locked: 0
+  - name: Platform
+    uniqueID: 3421803725
+    locked: 0
+  - name: Player
+    uniqueID: 4168449907
+    locked: 0
+  - name: Stone
+    uniqueID: 838506083
+    locked: 0
+  - name: ForegroundDeco
+    uniqueID: 1396150845
     locked: 0
