@@ -184,7 +184,7 @@ public class playerScript : MonoBehaviour
     {
         //Debug.Log($"inputthrough new system:{context.ReadValue<Vector2>()}");
         _inputVector = context.ReadValue<Vector2>();
-        Debug.Log($"input vec: {_inputVector}");
+        //Debug.Log($"input vec: {_inputVector}");
     }
 
 
