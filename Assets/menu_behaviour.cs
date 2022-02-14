@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-
-public class exitgame : MonoBehaviour
+public class menu_behaviour : MonoBehaviour
 {
     public void ExitButton()
     {
