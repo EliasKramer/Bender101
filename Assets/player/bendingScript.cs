@@ -8,14 +8,17 @@ public class bendingScript : MonoBehaviour
     private List<GameObject> currActionFieldCollisions;
     private List<GameObject> actualPlayerCollisions;
 
+    [SerializeField]
+    GameObject Platforms;
+    private Collider2D _platformCompositeCollider;
+    private Collider2D _platformGridCollider;
+
     private float mouseSmoothingInnerBorder = 0.1f;
     private float mouseSmoothingOuterBorder = 3f;
 
     private float _stompDelayInMs = 400f;
     private float _timeForHover = 200f;
     private Delay _stompDelay;
-
-    private float _forceForStone = 6f;
 
     private float _pushDelayInMs = 500f;
     private Delay _pushDelay;
@@ -26,11 +29,15 @@ public class bendingScript : MonoBehaviour
     private Vector2 _worldPointWhereClicked;
     private bool _altMode1Active = false;
 
-    static private float _speedForMovingObjects = 4f;
+    [SerializeField]
+    public float SpeedForStoneShooting = 40f;
+    public float SpeedForStoneMovement = 4f;
+
     static private float _innerSafetyZoneRadiusAroundThePlayerRadius = 2f;
     static private float _outerSafetyZoneRadiusAroundThePlayerRadius = _innerSafetyZoneRadiusAroundThePlayerRadius + 0.2f;
-    [SerializeField]
-    private GameObject _actionField;
+
+    private bool _underMeshDetetctionActivated = false;
+
     public Camera _cam;
     void Start()
     {
@@ -41,10 +48,12 @@ public class bendingScript : MonoBehaviour
         _pushDelay = new Delay(_pushDelayInMs, false);
         _pullDelay = new Delay(_pullDelayInMs, false);
 
+        _platformCompositeCollider = Platforms.GetComponent<CompositeCollider2D>();
     }
-    void Update()
+    void FixedUpdate()
     {
         PerformAttacks();
+        StoneUnderMeshPrevention();
     }
     private void PerformAttacks()
     {
@@ -65,6 +74,40 @@ public class bendingScript : MonoBehaviour
                 PerformPullToMouseAttack();
             }
         }
+    }
+    private void StoneUnderMeshPrevention()
+    {
+        /*
+        if(true)//_underMeshDetetctionActivated)
+        {
+            foreach(GameObject curr in currActionFieldCollisions)
+            {
+                ColliderDistance2D collDist = Physics2D.Distance(curr.GetComponent<Collider2D>(), _platformCompositeCollider);
+                
+                //Debug.Log($"dist:{collDist.distance},pointA:{collDist.pointA},pointB:{collDist.pointB}");
+                Debug.DrawLine(collDist.pointA,
+                    collDist.pointB,
+                    Color.red,
+                    0.1f);
+
+                Debug.DrawLine(collDist.pointA,
+                    this.transform.position,
+                    Color.blue,
+                    0.1f);
+
+                if(_platformCompositeCollider.OverlapPoint(collDist.pointA))
+                {
+                    curr.transform.position = collDist.pointB;
+                }
+                Debug.Log($"a: {_platformCompositeCollider.OverlapPoint(collDist.pointA)} b:{_platformCompositeCollider.OverlapPoint(collDist.pointB)}");
+
+
+            }
+        }*/
+    }
+    private void SetObjectSpeed(GameObject obj, Vector2 speed)
+    {
+        obj.GetComponent<Rigidbody2D>().velocity = (speed);
     }
     private void PerformHoverAttack()
     {
@@ -108,7 +151,8 @@ public class bendingScript : MonoBehaviour
             if (objectsToMove[i] != null) // if the player finds a stone, it should be moved
             {
                 float slowDownIfNearMult = MultiplierForObjectSlowDown(vecToObject[i].magnitude, 0.1f, 0.8f, false);
-                objectsToMove[i].GetComponent<Rigidbody2D>().velocity = (vecToObject[i].normalized) * 5f * -1f * slowDownIfNearMult;
+                Vector2 movementVec = (vecToObject[i].normalized) * SpeedForStoneMovement * -1f * slowDownIfNearMult;
+                SetObjectSpeed(objectsToMove[i], movementVec);
             }
         }
     }
@@ -154,7 +198,8 @@ public class bendingScript : MonoBehaviour
 
             //set the veclocity to the calculated the point with a set speed. 
             //it should also slow down if it gets near the point to avoid shaking
-            curr.GetComponent<Rigidbody2D>().velocity = actualspeed.normalized * 4f * MultiplierForObjectSlowDown(actualspeed.magnitude, 0.1f, 0.2f, false);
+            Vector2 finalMovement = actualspeed.normalized * SpeedForStoneMovement * MultiplierForObjectSlowDown(actualspeed.magnitude, 0.1f, 0.2f, false);
+            SetObjectSpeed(curr, finalMovement);
         }
     }
     private void PerformPullToMouseAttack()
@@ -210,12 +255,12 @@ public class bendingScript : MonoBehaviour
             }
 
             //now we apply a velocity to our direction
-            actualSpeedVec *= _speedForMovingObjects;
+            actualSpeedVec *= SpeedForStoneMovement;
 
 
 
             //applying the velocity and slowing it down if it goes towards the player.
-            curr.GetComponent<Rigidbody2D>().velocity = GetSpeedWithAntiPlayerCollision(curr, actualSpeedVec, 0.1f, true); ;
+            SetObjectSpeed(curr, GetSpeedWithAntiPlayerCollision(curr, actualSpeedVec, 0.3f, true));
         }
     }
     /// <summary>
@@ -336,7 +381,7 @@ public class bendingScript : MonoBehaviour
             {
                 foreach (GameObject curr in currActionFieldCollisions)
                 {
-                    curr.GetComponent<Rigidbody2D>().velocity = new Vector2(0, _forceForStone);
+                    SetObjectSpeed(curr, new Vector2(0, SpeedForStoneMovement));
                 }
             }
         }
@@ -360,9 +405,9 @@ public class bendingScript : MonoBehaviour
                     {
                         speedVec = (_worldPointWhereClicked - (Vector2)curr.transform.position).normalized;
                     }
-                    speedVec *= 25f;
+                    speedVec *= SpeedForStoneShooting;
                     speedVec.y *= 0.2f;
-                    curr.GetComponent<Rigidbody2D>().velocity += speedVec;
+                    SetObjectSpeed(curr,speedVec);
                 }
             }
         }
@@ -400,6 +445,17 @@ public class bendingScript : MonoBehaviour
         if (context.canceled) // taste wieder oben
         {
             _pullDelay.StopAction();
+        }
+    }
+    public void StoneUnderMeshPrevention(InputAction.CallbackContext context)
+    {
+        if(context.performed)
+        {
+            _underMeshDetetctionActivated = true;
+        }
+        if(context.canceled)
+        {
+            _underMeshDetetctionActivated = false;
         }
     }
     public void AltMode1(InputAction.CallbackContext context)
