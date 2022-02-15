@@ -69,7 +69,6 @@ public class Delay
     /// <summary>
     /// A getter for the Action duration in Ms
     /// </summary>
-    /// 
     /// <returns>returns the time since the start of the action in ms or -1 if the action wasnt started</returns>
     public float ActionDurationInMs
     {

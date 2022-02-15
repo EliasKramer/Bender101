@@ -4,13 +4,19 @@ using UnityEngine;
 
 public class StoneScript : MonoBehaviour
 {
+    //The collider of the stone
     private Collider2D _attachedCollider;
+    //the last position that doesnt overlap with the platform
     private Vector2 _lastSafePosition;
+    private float _maxVelocity = 2f;
+    //a reference to the platform the player can move on
     private Collider2D _platform;
+    //the contact filter. it should only find the platform, so that could be improved
     private static ContactFilter2D _filter = new ContactFilter2D();
-    private static float _velocityForAntiMesh = 4f;
+    //the attached rigidbody of the stone
     private Rigidbody2D _rb;
-    private bool _temp;
+
+    private float criticalSpeed = 5f;
     void Start()
     {
         _attachedCollider = GetComponent<Collider2D>();
@@ -18,45 +24,31 @@ public class StoneScript : MonoBehaviour
         _platform = GameObject.Find("MetaData").GetComponent<MetaDataScript>().Platform;
         _filter.NoFilter();
         _rb = GetComponent<Rigidbody2D>();
-        _temp = false;
     }
+
     void FixedUpdate()
     {
-        List<Collider2D> overlapping = new List<Collider2D>();
-        int sizeOfList = _attachedCollider.OverlapCollider(_filter, overlapping);
-        foreach (Collider2D c in overlapping)
+        if (_rb.velocity.magnitude > criticalSpeed)
         {
-            //Debug.Log($"in {this.name} : {c.name} : {c} : {_platform}");
-        }
-        float distance = Physics2D.Distance(_attachedCollider, _platform).distance;
-        //Debug.Log(distance);
-        if (overlapping.Contains(_platform) && distance < -0.1f)// && _temp == false)//_platform.OverlapPoint(transform.position))
-        {
-            //Debug.Log($"is overlapping lsp{_lastSafePosition}");
-            _rb.velocity = Vector2.zero;
-            _rb.simulated = false;
+            List<Collider2D> overlapping = new List<Collider2D>();
+            _attachedCollider.OverlapCollider(_filter, overlapping);
 
-            transform.position = _lastSafePosition;
-            Debug.Log($"setpos:{_lastSafePosition}");
+            float distance = Physics2D.Distance(_attachedCollider, _platform).distance;
 
-            _rb.simulated = true;
-            /*Vector2 vectorForGettingBackToSafePosition = ((Vector2)transform.position - _lastSafePosition)
-                *-1f;
-            if(vectorForGettingBackToSafePosition.magnitude > _velocityForAntiMesh)
+            if (overlapping.Contains(_platform) && distance < -0.1f)
             {
-                vectorForGettingBackToSafePosition = vectorForGettingBackToSafePosition.normalized * _velocityForAntiMesh;
+
+                Vector2 velocityBefore = _rb.velocity;
+                _rb.velocity = Vector2.zero;
+
+
+                transform.position = _lastSafePosition;
+                _rb.velocity = velocityBefore.normalized * criticalSpeed;
             }
-            Debug.DrawLine(transform.position,
-                (Vector2)transform.position + vectorForGettingBackToSafePosition,
-                Color.magenta,
-                0.1f);
-            transform.Translate(vectorForGettingBackToSafePosition);*/
-        }
-        else
-        {
-            //Debug.Log($"not overlapping lsp{_lastSafePosition}");
-            _lastSafePosition = transform.position;
-            //_temp = false;
+            else
+            {
+                _lastSafePosition = transform.position;
+            }
         }
     }
 }
