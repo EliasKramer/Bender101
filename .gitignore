@@ -453,6 +453,7 @@ sysinfo.txt
 *.aab
 *.unitypackage
 *.app
+*.dwlt
 
 # Crashlytics generated file
 crashlytics-build.properties
