@@ -406,7 +406,7 @@ public class bendingScript : MonoBehaviour
                         speedVec = (_worldPointWhereClicked - (Vector2)curr.transform.position).normalized;
                     }
                     speedVec *= SpeedForStoneShooting;
-                    speedVec.y *= 0.2f;
+                    //speedVec.y *= 0.2f;
                     SetObjectSpeed(curr,speedVec);
                 }
             }
