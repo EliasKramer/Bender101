@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -53,7 +52,6 @@ public class bendingScript : MonoBehaviour
     void FixedUpdate()
     {
         PerformAttacks();
-        StoneUnderMeshPrevention();
     }
     private void PerformAttacks()
     {
@@ -74,36 +72,6 @@ public class bendingScript : MonoBehaviour
                 PerformPullToMouseAttack();
             }
         }
-    }
-    private void StoneUnderMeshPrevention()
-    {
-        /*
-        if(true)//_underMeshDetetctionActivated)
-        {
-            foreach(GameObject curr in currActionFieldCollisions)
-            {
-                ColliderDistance2D collDist = Physics2D.Distance(curr.GetComponent<Collider2D>(), _platformCompositeCollider);
-                
-                //Debug.Log($"dist:{collDist.distance},pointA:{collDist.pointA},pointB:{collDist.pointB}");
-                Debug.DrawLine(collDist.pointA,
-                    collDist.pointB,
-                    Color.red,
-                    0.1f);
-
-                Debug.DrawLine(collDist.pointA,
-                    this.transform.position,
-                    Color.blue,
-                    0.1f);
-
-                if(_platformCompositeCollider.OverlapPoint(collDist.pointA))
-                {
-                    curr.transform.position = collDist.pointB;
-                }
-                Debug.Log($"a: {_platformCompositeCollider.OverlapPoint(collDist.pointA)} b:{_platformCompositeCollider.OverlapPoint(collDist.pointB)}");
-
-
-            }
-        }*/
     }
     private void SetObjectSpeed(GameObject obj, Vector2 speed)
     {
@@ -342,8 +310,8 @@ public class bendingScript : MonoBehaviour
             }
         }
         //if it is not moving towards the player we can just give the speed it wants to move back.
-        //no need for slowing down
-        return speedVecTryingToApply;
+        //no need for slowing down (only if it moves really close to the mouse. then it should slow down fast to avoid shaking)
+        return speedVecTryingToApply*MultiplierForObjectSlowDown((_worldPointWhereClicked-(Vector2)obj.transform.position).magnitude,mouseSmoothingInnerBorder,mouseSmoothingOuterBorder,true);
     }
     /// <summary>
     /// this mehtod takes the distance to an object and slows it down the more it comes to the inner Border. As soon as the outer Border is reached it slows the object down.
@@ -368,8 +336,8 @@ public class bendingScript : MonoBehaviour
         if (distanceToObject < outerBorderToObect)
         {
             float calcNumberInBorderSystem = distanceToObject - innerBorderToObject;
-            //Debug.Log($"distaceTo Object: {distanceToObject}, calcNumberInBorderSystem {calcNumberInBorderSystem}, return: {calcNumberInBorderSystem / distBetweenBorders}");
-            return calcNumberInBorderSystem / distBetweenBorders;
+            float retVal = calcNumberInBorderSystem / distBetweenBorders;
+            return retVal >= -1 ? retVal : -1;
         }
         return 1;
     }
@@ -445,17 +413,6 @@ public class bendingScript : MonoBehaviour
         if (context.canceled) // taste wieder oben
         {
             _pullDelay.StopAction();
-        }
-    }
-    public void StoneUnderMeshPrevention(InputAction.CallbackContext context)
-    {
-        if(context.performed)
-        {
-            _underMeshDetetctionActivated = true;
-        }
-        if(context.canceled)
-        {
-            _underMeshDetetctionActivated = false;
         }
     }
     public void AltMode1(InputAction.CallbackContext context)

@@ -67,15 +67,6 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "AntiCollisionMode",
-                    "type": "Button",
-                    "id": "bdf6307d-ff9c-4d94-8b3e-b71264c16195",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -340,17 +331,6 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "AltMode1",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "604b52a3-39c6-46d6-895d-347223e0a94d",
-                    "path": "<Keyboard>/e",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "AntiCollisionMode",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
