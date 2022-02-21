@@ -25,12 +25,14 @@ public class bendingScript : MonoBehaviour
     private float _pullDelayInMs = 500f;
     private Delay _pullDelay;
 
-    private Vector2 _worldPointWhereClicked;
+    private Vector2 _currentMousePos;
+    private Vector2 _startMousePos;
     private bool _altMode1Active = false;
 
     [SerializeField]
     public float SpeedForStoneShooting = 40f;
     public float SpeedForStoneMovement = 4f;
+    public float SpeedForstoneStomp = 6f;
 
     static private float _innerSafetyZoneRadiusAroundThePlayerRadius = 2f;
     static private float _outerSafetyZoneRadiusAroundThePlayerRadius = _innerSafetyZoneRadiusAroundThePlayerRadius + 0.2f;
@@ -55,7 +57,7 @@ public class bendingScript : MonoBehaviour
     }
     private void PerformAttacks()
     {
-        _worldPointWhereClicked = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        _currentMousePos = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
 
         if (_stompDelay.IsDoingAction && (_stompDelay.ActionDurationInMs > _timeForHover) && !_pullDelay.IsDoingAction && !_pushDelay.IsDoingAction)
         {
@@ -73,9 +75,52 @@ public class bendingScript : MonoBehaviour
             }
         }
     }
-    private void SetObjectSpeed(GameObject obj, Vector2 speed)
+
+    private void SetObjectSpeed(GameObject objectToMove, Vector2 attemtedVelocityToApply)
     {
-        obj.GetComponent<Rigidbody2D>().velocity = (speed);
+        /*
+        float maxSpeedChange = 1.5f;
+
+        Rigidbody2D rb = objectToMove.GetComponent<Rigidbody2D>();
+        Vector2 currentVelocity = rb.velocity;
+
+        Debug.DrawLine(objectToMove.transform.position,
+            (Vector2)objectToMove.transform.position + currentVelocity,
+            Color.blue,
+            0.1f);
+
+        //if it faces the same direction
+        if(currentVelocity.normalized == attemtedVelocityToApply.normalized)
+        {
+            //it should check if the speed we try to apply is in the bounds of possebility
+            if(currentVelocity.magnitude+maxSpeedChange <= attemtedVelocityToApply.magnitude)
+            {
+                rb.velocity += currentVelocity.normalized * maxSpeedChange;
+            }
+            else{
+                rb.velocity = attemtedVelocityToApply;
+            }
+        }
+        else
+        {
+            if (currentVelocity.magnitude - maxSpeedChange > 0)
+            {
+                rb.velocity -= currentVelocity.normalized * maxSpeedChange;
+            }
+            else
+            {
+                //if the current velocity is set to zero, it should change direction to the future velocity we try to apply
+        
+                    rb.velocity = attemtedVelocityToApply.normalized * maxSpeedChange;
+                
+            }
+        }
+        Debug.DrawLine(objectToMove.transform.position,
+            (Vector2)objectToMove.transform.position + rb.velocity,
+            Color.red,
+            0.1f);*/
+        objectToMove.GetComponent<Rigidbody2D>().velocity = (attemtedVelocityToApply);
+
     }
     private void PerformHoverAttack()
     {
@@ -175,10 +220,10 @@ public class bendingScript : MonoBehaviour
         foreach (GameObject curr in currActionFieldCollisions)
         {
             // get the inital vector where the object shall head to
-            Vector2 distanceClickedObj = (_worldPointWhereClicked - (Vector2)curr.transform.position);
+            Vector2 distanceClickedObj = (_currentMousePos - (Vector2)curr.transform.position);
 
             //this will be used later to determin wether you clicked left or right in relation to the player
-            Vector2 distanceClickedPlayer = (Vector2)this.transform.position - _worldPointWhereClicked;
+            Vector2 distanceClickedPlayer = (Vector2)this.transform.position - _currentMousePos;
 
             // this will be the speed we will apply later. Before that we give it the general direction it shall head to.
             Vector2 actualSpeedVec = distanceClickedObj.normalized;
@@ -287,7 +332,7 @@ public class bendingScript : MonoBehaviour
         //if the object would continue this path it would hit the player, so we slow it down
         if (angleToPlayer > angleToBorder)
         {
-            //the distance between the tow colliders
+            //the distance between the two colliders
             float colliderDistance = Physics2D.Distance(this.GetComponent<Collider2D>(), obj.GetComponent<Collider2D>()).distance;
 
             //calculating a multiplier by how much we should slow our object down
@@ -309,9 +354,12 @@ public class bendingScript : MonoBehaviour
                 return vecPlayerObject.normalized * speedMultForPlayerDistance * -1f;
             }
         }
-        //if it is not moving towards the player we can just give the speed it wants to move back.
-        //no need for slowing down (only if it moves really close to the mouse. then it should slow down fast to avoid shaking)
-        return speedVecTryingToApply*MultiplierForObjectSlowDown((_worldPointWhereClicked-(Vector2)obj.transform.position).magnitude,mouseSmoothingInnerBorder,mouseSmoothingOuterBorder,true);
+        //the normal case. should slow down if it goes near the mouse to avoid shaking
+        return speedVecTryingToApply * MultiplierForObjectSlowDown(
+            (_currentMousePos - (Vector2)obj.transform.position).magnitude,
+            mouseSmoothingInnerBorder,
+            mouseSmoothingOuterBorder,
+            true);
     }
     /// <summary>
     /// this mehtod takes the distance to an object and slows it down the more it comes to the inner Border. As soon as the outer Border is reached it slows the object down.
@@ -323,10 +371,7 @@ public class bendingScript : MonoBehaviour
     /// <returns></returns>
     private float MultiplierForObjectSlowDown(float distanceToObject, float innerBorderToObject, float outerBorderToObect, bool neagativeSpeedForObject)
     {
-
         float distBetweenBorders = outerBorderToObect - innerBorderToObject;
-        //innerBorderToObject += ObjSize.magnitude;
-        //outerBorderToObect += ObjSize.magnitude;
 
         //if you dont want negative speed
         if (distanceToObject < innerBorderToObject && !neagativeSpeedForObject)
@@ -349,14 +394,14 @@ public class bendingScript : MonoBehaviour
             {
                 foreach (GameObject curr in currActionFieldCollisions)
                 {
-                    SetObjectSpeed(curr, new Vector2(0, SpeedForStoneMovement));
+                    SetObjectSpeed(curr, new Vector2(0, SpeedForstoneStomp));
                 }
             }
         }
     }
     private void PerformRegularPushAttack()
     {
-        _worldPointWhereClicked = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        _currentMousePos = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
         if (!_pullDelay.IsDoingAction)
         {
             if (_pushDelay.IsDoingAction)
@@ -366,16 +411,16 @@ public class bendingScript : MonoBehaviour
                     Vector2 speedVec;
                     if (!_altMode1Active)
                     {
-                        speedVec = (_worldPointWhereClicked - (Vector2)this.transform.position).normalized;
+                        speedVec = (_currentMousePos - (Vector2)this.transform.position).normalized;
 
                     }
                     else
                     {
-                        speedVec = (_worldPointWhereClicked - (Vector2)curr.transform.position).normalized;
+                        speedVec = (_currentMousePos - (Vector2)curr.transform.position).normalized;
                     }
                     speedVec *= SpeedForStoneShooting;
                     //speedVec.y *= 0.2f;
-                    SetObjectSpeed(curr,speedVec);
+                    SetObjectSpeed(curr, speedVec);
                 }
             }
         }
@@ -396,12 +441,14 @@ public class bendingScript : MonoBehaviour
     {
         if (context.performed) //taste unten
         {
+            _startMousePos = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             _pushDelay.StartAction();
         }
         if (context.canceled) // taste wieder oben
         {
             PerformRegularPushAttack();
             _pushDelay.StopAction();
+            
         }
     }
     public void PullAttack(InputAction.CallbackContext context)
