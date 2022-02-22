@@ -1201,6 +1201,7 @@ MonoBehaviour:
   Platforms: {fileID: 0}
   SpeedForStoneShooting: 40
   SpeedForStoneMovement: 4
+  SpeedForstoneStomp: 6
   _cam: {fileID: 6405092078239415997}
 --- !u!114 &6405092078933965006
 MonoBehaviour:

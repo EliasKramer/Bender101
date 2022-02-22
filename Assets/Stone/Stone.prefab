@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7252809574651577310}
   - component: {fileID: 6068535842181650878}
   - component: {fileID: -9009890235811479624}
+  - component: {fileID: 3594897287671356801}
   m_Layer: 0
   m_Name: Stone
   m_TagString: Stone
@@ -99,7 +100,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 1
-  m_Mass: 4.2056575
+  m_Mass: 0.44576767
   m_LinearDrag: 0
   m_AngularDrag: 1.1
   m_GravityScale: 1
@@ -165,3 +166,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aed6bd25595298340b566df3c50d3b29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &3594897287671356801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7252809574651577308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13d57bfb5a556c741a71b82d65a1e10e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textureType: 0
+  slicingLayer: 0
+  colliderType: 0
+  materialSettings:
+    triangulation: 0
+    material: {fileID: 0}
+    sideMaterial: {fileID: 0}
+    scale: {x: 1, y: 1}
+    offset: {x: 0, y: 0}
+    depth: 1
+    batchMaterial: 0
+  shapeType: 0
+  instantiateMethod: 1
+  centerOfSlice: 1
+  recalculateMass: 0
+  supportJoints: 0
+  anchor:
+    enable: 0
+    anchorsList:
+    - {fileID: 0}
+    anchorType: 0
+    anchorColliders: []
+  afterSliceRemoveOrigin: 1

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Utilities2D;
 
 public class bendingScript : MonoBehaviour
 {
@@ -447,8 +448,9 @@ public class bendingScript : MonoBehaviour
         if (context.canceled) // taste wieder oben
         {
             PerformRegularPushAttack();
+            Pair2D pair = new Pair2D(_startMousePos, _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue()));
+            Slicer2D.Slicing.LinearSliceAll(pair);
             _pushDelay.StopAction();
-            
         }
     }
     public void PullAttack(InputAction.CallbackContext context)
