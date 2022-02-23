@@ -49,12 +49,13 @@ public class bendingScript : MonoBehaviour
         _stompDelay = new Delay(_stompDelayInMs, false);
         _pushDelay = new Delay(_pushDelayInMs, false);
         _pullDelay = new Delay(_pullDelayInMs, false);
-
         _platformCompositeCollider = Platforms.GetComponent<CompositeCollider2D>();
     }
     void FixedUpdate()
     {
         PerformAttacks();
+ 
+        
     }
     private void PerformAttacks()
     {
@@ -407,24 +408,126 @@ public class bendingScript : MonoBehaviour
         {
             if (_pushDelay.IsDoingAction)
             {
-                foreach (GameObject curr in currActionFieldCollisions)
+                if (_altMode1Active)
                 {
-                    Vector2 speedVec;
-                    if (!_altMode1Active)
+                    foreach (GameObject curr in currActionFieldCollisions)
                     {
-                        speedVec = (_currentMousePos - (Vector2)this.transform.position).normalized;
+                        Vector2 direction;
+
+                        direction = (_currentMousePos - (Vector2)curr.transform.position).normalized;
+
+                        ApplyPushVelocity(curr, direction);
+                    }
+                }
+                else
+                {
+                    if (currActionFieldCollisions.Count != 0)
+                    {
+                        GameObject nearestObject = null;
+                        float nearestDistance = float.MaxValue;
+                        foreach (GameObject curr in currActionFieldCollisions)
+                        {
+                            Vector2 objToMousePos = _currentMousePos - (Vector2)curr.transform.position;
+                            if (nearestObject == null || objToMousePos.magnitude <= nearestDistance)
+                            {
+                                nearestObject = curr;
+                                nearestDistance = objToMousePos.magnitude;
+                            }
+                        }
+                        Vector2 thisPos = transform.position;
+                        Vector2 boundsVector = nearestObject.GetComponent<Collider2D>().bounds.size;
+
+                        ColliderDistance2D collDist = Physics2D.Distance(GetComponent<Collider2D>(), nearestObject.GetComponent<Collider2D>());
+
+                        Vector2 playerObjectVec = (Vector2)(nearestObject.transform.position) - thisPos;
+                        Vector2 mouseToPlayer = _currentMousePos - thisPos;
+
+                        Vector2 rightAngle = mouseToPlayer;
+                        rightAngle.x = mouseToPlayer.y;
+                        rightAngle.y = mouseToPlayer.x;
+
+                        rightAngle.x *= -1f;
+                        rightAngle.Normalize();
+
+                        float thickness = 0.2f;
+
+                        Vector2 playerUpStartPoint = thisPos + (rightAngle * (thickness / 2));
+
+                        rightAngle *= -1f;
+
+                        Vector2 playerDownStartPoint = thisPos + (rightAngle * (thickness / 2));
+
+                        Pair2D pair = new Pair2D(playerUpStartPoint, playerUpStartPoint + mouseToPlayer);
+                        Pair2D pair2 = new Pair2D(playerDownStartPoint, playerDownStartPoint + mouseToPlayer);
+
+                        //Debug.DrawLine(thisPos, collDist.pointB, Color.green, 5f);
+                        //Debug.DrawLine(thisPos, thisPos + mouseToPlayer, Color.magenta, 5f);
+
+                        Debug.DrawLine(playerUpStartPoint, playerUpStartPoint + mouseToPlayer, Color.green, 5f);
+                        Debug.DrawLine(playerDownStartPoint, playerDownStartPoint + mouseToPlayer, Color.green, 5f);
+
+                        Slicer2D.Slicing.LinearSliceAll(pair);
+                        
+                        List<Slicer2D.Slice2D> slices = Slicer2D.Slicing.LinearSliceAll(pair2);
+                        foreach (Slicer2D.Slice2D currentSlice in slices)
+                        {
+                            GameObject objectToShoot = null;
+                            float lastDistance = float.MaxValue;
+
+                            foreach (GameObject currentGameObject in currentSlice.GetGameObjects())
+                            {
+                                Vector2 middlePointOfVector = thisPos + (mouseToPlayer / 2);
+
+                                DrawPoint(middlePointOfVector);
+
+                                Collider2D collider = currentGameObject.GetComponent<Collider2D>();
+
+                                float currDistance = ((Vector2)currentGameObject.transform.position - middlePointOfVector).magnitude;
+
+                                Debug.Log($"collider:{collider.gameObject.name} distance to point = {currDistance}");
+
+
+
+                                if (objectToShoot == null || currDistance < lastDistance)// ||)
+                                {
+                                    objectToShoot = currentGameObject;
+                                    lastDistance = currDistance;
+                                }
+                                /*if (collider.OverlapPoint(middlePointOfVector))
+                                {
+                                    Debug.Log($"{currentGameObject.name} applied force");
+                                }*/
+                            }
+                            if(objectToShoot != null)
+                            {
+                                Debug.Log($"objecttoshoot:{objectToShoot.name}");
+                                ApplyPushVelocity(objectToShoot, (_currentMousePos-(Vector2)this.transform.position).normalized);
+
+                            }
+
+                        }
 
                     }
-                    else
-                    {
-                        speedVec = (_currentMousePos - (Vector2)curr.transform.position).normalized;
-                    }
-                    speedVec *= SpeedForStoneShooting;
-                    //speedVec.y *= 0.2f;
-                    SetObjectSpeed(curr, speedVec);
                 }
             }
         }
+    }
+    private void DrawPoint(Vector2 point)
+    {
+        float size = 0.1f;
+        float time = 5f;
+        Color color = Color.red;
+        Debug.DrawLine(point, point + (Vector2.right * size), color, time);
+        Debug.DrawLine(point, point + (Vector2.left * size), color, time);
+        Debug.DrawLine(point, point + (Vector2.up * size), color, time);
+        Debug.DrawLine(point, point + (Vector2.down * size), color, time);
+
+    }
+    private void ApplyPushVelocity(GameObject obj, Vector2 dir)
+    {
+        dir *= SpeedForStoneShooting;
+        //dir.y *= 0.2f;
+        SetObjectSpeed(obj, dir);
     }
     public void StompAttack(InputAction.CallbackContext context)
     {

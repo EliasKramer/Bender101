@@ -1,4 +1,5 @@
 using UnityEngine;
+using Utilities2D;
 
 public class StoneScript : MonoBehaviour
 {
@@ -10,12 +11,11 @@ public class StoneScript : MonoBehaviour
 
     //at that velocity or higher, it can happen, that the stone gets stuck in a wall or in another stone
     private float criticalSpeed = 5f; //is only a rough value -> could be higher (it is not tested)
-
     void Start()
     {
         //getting the attached rigidbody 
         _rb = GetComponent<Rigidbody2D>();
-        
+
         _rb.GetComponent<Collider2D>().density = _density;
     }
     void FixedUpdate()
