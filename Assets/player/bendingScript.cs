@@ -26,6 +26,8 @@ public class bendingScript : MonoBehaviour
     private float _pullDelayInMs = 500f;
     private Delay _pullDelay;
 
+    private bool _testStateIsOn = false;
+
     private Vector2 _currentMousePos;
     private Vector2 _startMousePos;
     private bool _altMode1Active = false;
@@ -54,8 +56,8 @@ public class bendingScript : MonoBehaviour
     void FixedUpdate()
     {
         PerformAttacks();
- 
-        
+
+        TestMethod();
     }
     private void PerformAttacks()
     {
@@ -467,7 +469,7 @@ public class bendingScript : MonoBehaviour
                         Debug.DrawLine(playerDownStartPoint, playerDownStartPoint + mouseToPlayer, Color.green, 5f);
 
                         Slicer2D.Slicing.LinearSliceAll(pair);
-                        
+
                         List<Slicer2D.Slice2D> slices = Slicer2D.Slicing.LinearSliceAll(pair2);
                         foreach (Slicer2D.Slice2D currentSlice in slices)
                         {
@@ -484,7 +486,7 @@ public class bendingScript : MonoBehaviour
 
                                 float currDistance = ((Vector2)currentGameObject.transform.position - middlePointOfVector).magnitude;
 
-                                Debug.Log($"collider:{collider.gameObject.name} distance to point = {currDistance}");
+                                //Debug.Log($"collider:{collider.gameObject.name} distance to point = {currDistance}");
 
 
 
@@ -498,10 +500,10 @@ public class bendingScript : MonoBehaviour
                                     Debug.Log($"{currentGameObject.name} applied force");
                                 }*/
                             }
-                            if(objectToShoot != null)
+                            if (objectToShoot != null)
                             {
-                                Debug.Log($"objecttoshoot:{objectToShoot.name}");
-                                ApplyPushVelocity(objectToShoot, (_currentMousePos-(Vector2)this.transform.position).normalized);
+                                //Debug.Log($"objecttoshoot:{objectToShoot.name}");
+                                ApplyPushVelocity(objectToShoot, (_currentMousePos - (Vector2)this.transform.position).normalized);
 
                             }
 
@@ -599,5 +601,83 @@ public class bendingScript : MonoBehaviour
         {
             actualPlayerCollisions.Remove(collision.gameObject);
         }
+    }
+    public void TestStateActivation(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            _testStateIsOn = !_testStateIsOn;
+        }
+    }
+    public void TestMethod()
+    {
+        if (_testStateIsOn)
+        {
+            GameObject obj = currActionFieldCollisions[0];
+            Vector2 bounds = this.GetComponent<Collider2D>().bounds.size;
+            Vector2 objectPos = obj.transform.position;
+            Vector2 playerPos = transform.position;
+
+            
+
+            Vector2 offset = ((playerPos - objectPos)*-1f).normalized;
+
+            offset *= bounds;
+
+            Debug.DrawLine(playerPos,
+                playerPos + offset,
+                Color.magenta,
+                0.1f);
+
+            DrawBounds(gameObject);
+        }
+    }
+    private void DrawBounds(GameObject obj)
+    {
+        Vector2 bounds = obj.GetComponent<Collider2D>().bounds.size / 2;
+        Vector2 midPoint = obj.transform.position;
+        
+        Vector2 boundsReal = midPoint;
+        boundsReal.x += bounds.x; 
+        boundsReal.y += bounds.y;
+        Vector2 rightUp = boundsReal;
+
+        boundsReal = midPoint;
+        boundsReal.x += bounds.x;
+        boundsReal.y -= bounds.y;
+        Vector2 rightDown = boundsReal;
+
+        boundsReal = midPoint;
+        boundsReal.x -= bounds.x;
+        boundsReal.y += bounds.y;
+        Vector2 leftUp = boundsReal;
+
+
+        boundsReal = midPoint;
+        boundsReal.x -= bounds.x;
+        boundsReal.y -= bounds.y;
+        Vector2 leftDown = boundsReal;
+
+
+        Debug.DrawLine(
+            leftUp,
+            rightUp,
+            Color.red,
+            0.1f);
+        Debug.DrawLine(
+            rightUp,
+            rightDown,
+            Color.red,
+            0.1f);
+        Debug.DrawLine(
+            rightDown,
+            leftDown,
+            Color.red,
+            0.1f);
+        Debug.DrawLine(
+            leftDown,
+            leftUp,
+            Color.red,
+            0.1f);
     }
 }
