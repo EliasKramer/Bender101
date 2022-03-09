@@ -1,54 +1,29 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Utilities2D;
 
 public class StoneScript : MonoBehaviour
 {
-    //The collider of the stone
-    private Collider2D _attachedCollider;
-    //the last position that doesnt overlap with the platform
-    private Vector2 _lastSafePosition;
-    private float _maxVelocity = 2f;
-    //a reference to the platform the player can move on
-    private Collider2D _platform;
-    //the contact filter. it should only find the platform, so that could be improved
-    private static ContactFilter2D _filter = new ContactFilter2D();
     //the attached rigidbody of the stone
     private Rigidbody2D _rb;
 
-    private float criticalSpeed = 5f;
+    //the density of the stone
+    private float _density = 80f;
+
+    //at that velocity or higher, it can happen, that the stone gets stuck in a wall or in another stone
+    private float criticalSpeed = 5f; //is only a rough value -> could be higher (it is not tested)
     void Start()
     {
-        _attachedCollider = GetComponent<Collider2D>();
-        _lastSafePosition = transform.position;
-        _platform = GameObject.Find("MetaData").GetComponent<MetaDataScript>().Platform;
-        _filter.NoFilter();
+        //getting the attached rigidbody 
         _rb = GetComponent<Rigidbody2D>();
-    }
 
+        _rb.GetComponent<Collider2D>().density = _density;
+    }
     void FixedUpdate()
     {
-        if (_rb.velocity.magnitude > criticalSpeed)
-        {
-            List<Collider2D> overlapping = new List<Collider2D>();
-            _attachedCollider.OverlapCollider(_filter, overlapping);
-
-            float distance = Physics2D.Distance(_attachedCollider, _platform).distance;
-
-            if (overlapping.Contains(_platform) && distance < -0.1f)
-            {
-
-                Vector2 velocityBefore = _rb.velocity;
-                _rb.velocity = Vector2.zero;
-
-
-                transform.position = _lastSafePosition;
-                _rb.velocity = velocityBefore.normalized * criticalSpeed;
-            }
-            else
-            {
-                _lastSafePosition = transform.position;
-            }
-        }
+        //if the velocity gets over the critical speed it should enable the more performance intensive mode,
+        //that doesnt let any stone get stuck in walls or stuck in other stones
+        _rb.collisionDetectionMode = (_rb.velocity.magnitude > criticalSpeed) ?
+            CollisionDetectionMode2D.Continuous :
+            CollisionDetectionMode2D.Discrete;
     }
 }
