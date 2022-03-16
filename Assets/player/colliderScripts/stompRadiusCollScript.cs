@@ -6,7 +6,7 @@ public class stompRadiusCollScript : MonoBehaviour
     {
         if (givenCollider.tag == "Stone")
         {
-            GetComponentInParent<bendingScript>().addCollidedStone(givenCollider.gameObject);
+            GetComponentInParent<BendingScript>().addCollidedStone(givenCollider.gameObject);
         }
         if(givenCollider.tag == "ActionField")
         {
@@ -17,7 +17,7 @@ public class stompRadiusCollScript : MonoBehaviour
     {
         if (givenCollider.tag == "Stone")
         {
-            GetComponentInParent<bendingScript>().remCollidedStone(givenCollider.gameObject);
+            GetComponentInParent<BendingScript>().remCollidedStone(givenCollider.gameObject);
         }
     }
 }

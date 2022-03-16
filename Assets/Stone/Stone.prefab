@@ -100,7 +100,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 1
-  m_Mass: 0.8199521
+  m_Mass: 382.07382
   m_LinearDrag: 0
   m_AngularDrag: 1.1
   m_GravityScale: 1
@@ -117,7 +117,7 @@ PolygonCollider2D:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7252809574651577308}
   m_Enabled: 1
-  m_Density: 1
+  m_Density: 100
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_UsedByEffector: 0
@@ -166,6 +166,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aed6bd25595298340b566df3c50d3b29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _default: {fileID: 6200000, guid: 84eb9988231a2ee44b35c54986673c99, type: 2}
+  _nofriction: {fileID: 6200000, guid: b95d58a32f7f071468198810fe5ee3f6, type: 2}
 --- !u!114 &3594897287671356801
 MonoBehaviour:
   m_ObjectHideFlags: 0

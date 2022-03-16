@@ -161,6 +161,7 @@ namespace Utilities2D {
 
 					float GC = Slicer2D.Settings.GetGarbageCollector();
 					if (GC > 0 & polygon.GetArea() < GC) {
+
 						Debug.LogWarning("Smart Utility 2D: Slice was removed because it was too small");
 						
 						return(null);

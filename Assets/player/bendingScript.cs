@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Utilities2D;
 
-public class bendingScript : MonoBehaviour
+public class BendingScript : MonoBehaviour
 {
     private List<GameObject> currActionFieldCollisions;
     private List<GameObject> actualPlayerCollisions;
@@ -33,7 +33,7 @@ public class bendingScript : MonoBehaviour
     private bool _altMode1Active = false;
 
     [SerializeField]
-    public float SpeedForStoneShooting = 40f;
+    public float SpeedForStoneShooting = 20f;
     public float SpeedForStoneMovement = 4f;
     public float SpeedForstoneStomp = 6f;
 
@@ -57,7 +57,17 @@ public class bendingScript : MonoBehaviour
     {
         PerformAttacks();
 
-        TestMethod();
+        GameObject test = null;
+        try
+        {
+            test = currActionFieldCollisions[0];
+        }
+        catch
+        { }
+        if (test != null)
+        {
+            TestMethod(currActionFieldCollisions[0], this.transform.position);
+        }
     }
     private void PerformAttacks()
     {
@@ -437,40 +447,109 @@ public class bendingScript : MonoBehaviour
                             }
                         }
                         Vector2 thisPos = transform.position;
-                        Vector2 boundsVector = nearestObject.GetComponent<Collider2D>().bounds.size;
 
-                        ColliderDistance2D collDist = Physics2D.Distance(GetComponent<Collider2D>(), nearestObject.GetComponent<Collider2D>());
-
-                        Vector2 playerObjectVec = (Vector2)(nearestObject.transform.position) - thisPos;
                         Vector2 mouseToPlayer = _currentMousePos - thisPos;
 
-                        Vector2 rightAngle = mouseToPlayer;
-                        rightAngle.x = mouseToPlayer.y;
-                        rightAngle.y = mouseToPlayer.x;
-
-                        rightAngle.x *= -1f;
-                        rightAngle.Normalize();
+                        Vector2 rightAngle = RightAngle(mouseToPlayer, true).normalized;
 
                         float thickness = 0.2f;
 
                         Vector2 playerUpStartPoint = thisPos + (rightAngle * (thickness / 2));
 
-                        rightAngle *= -1f;
+                        Vector2 playerDownStartPoint = thisPos + ((rightAngle * -1) * (thickness / 2));
 
-                        Vector2 playerDownStartPoint = thisPos + (rightAngle * (thickness / 2));
+                        float timeForDebug = 5f;
 
-                        Pair2D pair = new Pair2D(playerUpStartPoint, playerUpStartPoint + mouseToPlayer);
-                        Pair2D pair2 = new Pair2D(playerDownStartPoint, playerDownStartPoint + mouseToPlayer);
+                        Debug.DrawLine(playerUpStartPoint, playerUpStartPoint + mouseToPlayer, Color.green, timeForDebug);
+                        Debug.DrawLine(playerDownStartPoint, playerDownStartPoint + mouseToPlayer, Color.green, timeForDebug);
+                        Debug.DrawLine(thisPos, thisPos + mouseToPlayer, Color.grey, timeForDebug);
 
-                        //Debug.DrawLine(thisPos, collDist.pointB, Color.green, 5f);
-                        //Debug.DrawLine(thisPos, thisPos + mouseToPlayer, Color.magenta, 5f);
+                        
+                        Pair2D sliceUpperLine = new Pair2D(playerUpStartPoint, playerUpStartPoint + mouseToPlayer);
+                        Pair2D sliceLowerLine = new Pair2D(playerDownStartPoint, playerDownStartPoint + mouseToPlayer);
+                        List<Slicer2D.Slice2D> upperSlices = Slicer2D.Slicing.LinearSliceAll(sliceUpperLine);
+                        List<Slicer2D.Slice2D> lowerSlices = Slicer2D.Slicing.LinearSliceAll(sliceLowerLine);
+                        
+                        /*
+                        Pair2 sliceUpperLine = new Pair2(playerUpStartPoint, playerUpStartPoint + mouseToPlayer);
+                        Pair2 sliceLowerLine = new Pair2(playerDownStartPoint, playerDownStartPoint + mouseToPlayer);
 
-                        Debug.DrawLine(playerUpStartPoint, playerUpStartPoint + mouseToPlayer, Color.green, 5f);
-                        Debug.DrawLine(playerDownStartPoint, playerDownStartPoint + mouseToPlayer, Color.green, 5f);
+                        List<Slicer2D.Slice2D> upperSlices = Slicer2D.Slicing.LinearCutSliceAll(LinearCut.Create(sliceUpperLine, 0.04f));
+                        List<Slicer2D.Slice2D> lowerSlices = Slicer2D.Slicing.LinearCutSliceAll(LinearCut.Create(sliceLowerLine, 0.04f));
+                        */
 
-                        Slicer2D.Slicing.LinearSliceAll(pair);
+                        /*
+                        foreach (Slicer2D.Slice2D slice in upperSlices)
+                        {
+                            foreach (GameObject curr in slice.GetGameObjects())
+                            {
+                                Debug.Log($"origin: {slice.originGameObject.name} upper curr: {curr.name}");
+                            }
+                        }*/
+                        List<GameObject> objectsThatShallNotMove = new List<GameObject>();
 
-                        List<Slicer2D.Slice2D> slices = Slicer2D.Slicing.LinearSliceAll(pair2);
+                        foreach (Slicer2D.Slice2D slice in lowerSlices)
+                        {
+                            foreach (GameObject curr in slice.GetGameObjects())
+                            {
+                                //curr.GetComponent<Rigidbody2D>().gravityScale = 0;
+                                Vector2 vecToCurr = (Vector2)curr.transform.position - thisPos;
+                                float angleToCurr = Vector2.Angle(mouseToPlayer, vecToCurr);
+
+                                float rightAngleDistanceToCurr = Mathf.Sin(Mathf.Deg2Rad * angleToCurr) * vecToCurr.magnitude;
+                                float parallelDistToCurr = Mathf.Cos(Mathf.Deg2Rad * angleToCurr) * vecToCurr.magnitude;
+
+                                Debug.DrawLine(curr.transform.position,
+                                    (Vector2)curr.transform.position + (RightAngle(mouseToPlayer.normalized, true) * rightAngleDistanceToCurr),
+                                    Color.blue,
+                                    timeForDebug);
+                                if (rightAngleDistanceToCurr <= (thickness / 2))
+                                {
+                                    /*Debug.Log($"-------name:{curr.name}--------");
+                                    Debug.Log($"angle:{angleToCurr}");
+                                    Debug.Log($"righAng:{rightAngleDistanceToCurr}");
+                                    Debug.Log($"parallelDist:{parallelDistToCurr}");*/
+                                    Debug.DrawLine(
+                                        thisPos,
+                                        thisPos + vecToCurr,
+                                        Color.magenta,
+                                        timeForDebug);
+                                    //curr.transform.Translate(Vector2.up * -0.2f * Time.deltaTime);
+                                    curr.GetComponent<StoneScript>().SetNoFriction();
+                                    ApplyPushVelocity(curr, mouseToPlayer.normalized);
+                                }
+                                else
+                                {
+                                    objectsThatShallNotMove.Add(curr);
+                                    //curr.transform.Translate(Vector2.up * -0.1f);
+                                    //curr.GetComponent<Rigidbody2D>().gravityScale = 0;
+                                    curr.GetComponent<Rigidbody2D>().velocity = Vector2.up * 5f;
+                                }
+                            }
+                        }
+                        foreach (Slicer2D.Slice2D slice in upperSlices)
+                        {
+                            foreach (GameObject curr in slice.GetGameObjects())
+                            {
+                                if (curr != null)
+                                {
+
+                                    objectsThatShallNotMove.Add(curr);
+
+                                    //curr.GetComponent<Rigidbody2D>().velocity += Vector2.down * 3f;
+
+                                    //curr.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+                                }
+                            }
+                        }
+
+                        foreach (GameObject curr in objectsThatShallNotMove)
+                        {
+                            Debug.Log(curr.name);
+                            //curr.GetComponent<Rigidbody2D>().freezeRotation = true;
+
+                        }
+                        /*
                         foreach (Slicer2D.Slice2D currentSlice in slices)
                         {
                             GameObject objectToShoot = null;
@@ -482,37 +561,39 @@ public class bendingScript : MonoBehaviour
 
                                 DrawPoint(middlePointOfVector);
 
-                                Collider2D collider = currentGameObject.GetComponent<Collider2D>();
-
                                 float currDistance = ((Vector2)currentGameObject.transform.position - middlePointOfVector).magnitude;
 
-                                //Debug.Log($"collider:{collider.gameObject.name} distance to point = {currDistance}");
-
-
-
-                                if (objectToShoot == null || currDistance < lastDistance)// ||)
+                                if (objectToShoot == null || currDistance < lastDistance)
                                 {
                                     objectToShoot = currentGameObject;
                                     lastDistance = currDistance;
                                 }
-                                /*if (collider.OverlapPoint(middlePointOfVector))
-                                {
-                                    Debug.Log($"{currentGameObject.name} applied force");
-                                }*/
                             }
                             if (objectToShoot != null)
                             {
-                                //Debug.Log($"objecttoshoot:{objectToShoot.name}");
                                 ApplyPushVelocity(objectToShoot, (_currentMousePos - (Vector2)this.transform.position).normalized);
-
                             }
-
-                        }
-
+                        }*/
                     }
                 }
             }
         }
+    }
+    private Vector2 RightAngle(Vector2 vec, bool swapX)
+    {
+        float tempX = vec.x;
+        vec.x = vec.y;
+        vec.y = tempX;
+
+        if (swapX)
+        {
+            vec.x *= -1;
+        }
+        else
+        {
+            vec.y *= -1;
+        }
+        return vec;
     }
     private void DrawPoint(Vector2 point)
     {
@@ -609,36 +690,118 @@ public class bendingScript : MonoBehaviour
             _testStateIsOn = !_testStateIsOn;
         }
     }
-    public void TestMethod()
+    public void TestMethod(GameObject givenObject, Vector2 toPointTo)
     {
+        //takes an object and goes in the direction of the point, till the collider bounds are reached
         if (_testStateIsOn)
         {
-            GameObject obj = currActionFieldCollisions[0];
-            Vector2 bounds = this.GetComponent<Collider2D>().bounds.size;
-            Vector2 objectPos = obj.transform.position;
-            Vector2 playerPos = transform.position;
+            Vector2 bounds = givenObject.GetComponent<Collider2D>().bounds.size / 2;
+            Vector2 objectPos = toPointTo;
+            Vector2 collPos = givenObject.transform.position;
 
-            
+            Vector2 offset = ((collPos - objectPos) * -1f).normalized * bounds.magnitude;
 
-            Vector2 offset = ((playerPos - objectPos)*-1f).normalized;
-
-            offset *= bounds;
-
-            Debug.DrawLine(playerPos,
-                playerPos + offset,
-                Color.magenta,
+            Debug.DrawLine(collPos,
+                objectPos,
+                Color.grey,
+                0.1f);
+            Debug.DrawLine(collPos,
+                collPos + offset,
+                Color.red,
                 0.1f);
 
-            DrawBounds(gameObject);
+            Vector2 offSetBefore = offset;
+
+            if (offset.x < 0)
+            {
+                bounds.x *= -1;
+            }
+            if (offset.y < 0)
+            {
+                bounds.y *= -1;
+            }
+
+            Debug.DrawLine(collPos,
+                collPos + bounds,
+                Color.red,
+                0.1f);
+
+            float diffX = diff(offset.x, bounds.x);
+            float diffY = diff(offset.y, bounds.y);
+            Debug.Log($"after offset:{offset} bounds:{bounds} diffX: {diffX} diffY: {diffY}");
+
+            float multX = 1;
+            float multY = 1;
+            if (positivVal(offset.y) > positivVal(bounds.y))
+            {
+                multY = bounds.y / offset.y;
+
+            }
+
+            if (positivVal(offset.x) > positivVal(bounds.x))
+            {
+                multX = bounds.x / offset.x;
+
+            }
+            Debug.Log($"multx {multX} multy {multY} ");
+
+            //float optinalMult = multY == 1 || multX == 1 ? 1 : 2;
+
+            Debug.DrawLine(collPos,
+                               collPos + (offset * multY * multX),
+                               Color.blue,
+                               0.1f);
+            /*
+
+            Vector2 offsetDir = offset.normalized;
+            //Debug.Log($"before offset:{offset} bounds:{bounds}");
+            if (offset.x > bounds.x || offset.x < (bounds.x * -1)) //other
+            {
+                if (offset.x >= 0)
+                {
+                    offset.x = bounds.x;
+                }
+                if(offset.x < 0)
+                {
+                    offset.x = bounds.x * -1f;
+                }
+            }
+                
+            float multX = offset.x / offSetBefore.x;
+            offset *= (1-multX);
+
+            //offset = offset.magnitude * offsetDir;
+            Debug.DrawLine(playerPos,
+                playerPos + offset,
+                Color.blue,
+                0.1f);
+            */
+            DrawBounds(givenObject);
         }
+    }
+    private float mittelwert(float a, float b)
+    {
+        return (a + b) / 2;
+    }
+    private float positivVal(float val)
+    {
+        if (val < 0)
+        {
+            return val * -1f;
+        }
+        return val;
+    }
+    private float diff(float a, float b)
+    {
+        return b - a;
     }
     private void DrawBounds(GameObject obj)
     {
         Vector2 bounds = obj.GetComponent<Collider2D>().bounds.size / 2;
         Vector2 midPoint = obj.transform.position;
-        
+
         Vector2 boundsReal = midPoint;
-        boundsReal.x += bounds.x; 
+        boundsReal.x += bounds.x;
         boundsReal.y += bounds.y;
         Vector2 rightUp = boundsReal;
 

@@ -29,11 +29,17 @@ namespace Slicer2D {
 				///	newRigidBody.centerOfMass = Vector2.zero;
 				//}
 				
-				if (slicer.recalculateMass) {
-					float newArea = (float)id.ToLocalSpace(slicer.transform).GetArea ();
-					newRigidBody.mass = originalRigidBody.mass * (float) (newArea / originArea);
-				} else {
-					newRigidBody.mass = originalRigidBody.mass;
+				if(!newRigidBody.useAutoMass)
+                {
+					if (slicer.recalculateMass)
+					{
+						float newArea = (float)id.ToLocalSpace(slicer.transform).GetArea();
+						newRigidBody.mass = originalRigidBody.mass * (float)(newArea / originArea);
+					}
+					else
+					{
+						newRigidBody.mass = originalRigidBody.mass;
+					}
 				}
 			}
 		}
