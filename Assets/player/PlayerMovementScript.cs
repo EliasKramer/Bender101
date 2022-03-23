@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class playerScript : MonoBehaviour
+public class PlayerMovementScript : MonoBehaviour
 {
     /// <summary>
     /// physic simulation 

@@ -10,14 +10,14 @@ public class SideColliderScript : MonoBehaviour
     {
         if(collision.tag == "Obstacle" || (_side == Const.CollisionSide.Down && collision.tag == "Stone"))
         {
-            GetComponentInParent<playerScript>().CollisionUpdateByChildCollider(true,_side);
+            GetComponentInParent<PlayerMovementScript>().CollisionUpdateByChildCollider(true,_side);
         }
     }
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.tag == "Obstacle" || (_side == Const.CollisionSide.Down && collision.tag == "Stone"))
         {
-            GetComponentInParent<playerScript>().CollisionUpdateByChildCollider(false, _side);
+            GetComponentInParent<PlayerMovementScript>().CollisionUpdateByChildCollider(false, _side);
         }
     }
 }

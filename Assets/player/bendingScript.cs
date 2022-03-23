@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Utilities2D;
-
+using System.Linq;
 public class BendingScript : MonoBehaviour
 {
     private List<GameObject> currActionFieldCollisions;
@@ -40,11 +40,24 @@ public class BendingScript : MonoBehaviour
     static private float _innerSafetyZoneRadiusAroundThePlayerRadius = 2f;
     static private float _outerSafetyZoneRadiusAroundThePlayerRadius = _innerSafetyZoneRadiusAroundThePlayerRadius + 0.2f;
 
-    private bool _underMeshDetetctionActivated = false;
-
+    /// <summary>
+    /// temporarily used variables
+    /// </summary>
+    private List<GameObject> _tempObjectsToMoveOutOfTheWay = new List<GameObject>();
+    private List<GameObject> _tempObjectsToShoot = new List<GameObject>();
+    private float _tempHeightForMovingOutOfTheWay;
+    private Vector2 _tempDirectionToApply;
+    private bool _tempStartedSlicingAction;
+    private long _tempCurrentFixedUpdateIterationCount;
+    private float _tempPushForceForSlicing = 5;
+    //end of temps
     public Camera _cam;
+
+    private long _fixedUpdateIterationCount;
     void Start()
     {
+        _fixedUpdateIterationCount = 0;
+
         currActionFieldCollisions = new List<GameObject>();
         actualPlayerCollisions = new List<GameObject>();
 
@@ -57,6 +70,8 @@ public class BendingScript : MonoBehaviour
     {
         PerformAttacks();
 
+        CheckForObjectMovement();
+
         GameObject test = null;
         try
         {
@@ -68,11 +83,108 @@ public class BendingScript : MonoBehaviour
         {
             TestMethod(currActionFieldCollisions[0], this.transform.position);
         }
+        _fixedUpdateIterationCount++;
     }
+
+    private void CheckForObjectMovement()
+    {
+        if (_tempStartedSlicingAction)
+        {
+            if (_fixedUpdateIterationCount == _tempCurrentFixedUpdateIterationCount)
+            {
+                //remove items that were null because slicer removed them if they were too small
+                _tempObjectsToShoot = _tempObjectsToShoot.Where(x => x != null).ToList();
+                _tempObjectsToMoveOutOfTheWay = _tempObjectsToMoveOutOfTheWay.Where(x => x != null).ToList();
+
+                _tempPushForceForSlicing = _tempObjectsToShoot.Count() * 5;
+                foreach (GameObject curr in _tempObjectsToMoveOutOfTheWay)
+                {
+
+                    curr.GetComponent<StoneScript>().SetNoFriction();
+                    //curr.GetComponent<Rigidbody2D>().freezeRotation = true;
+
+                    if (curr.transform.position.y < _tempHeightForMovingOutOfTheWay)
+                    {
+                        //Debug.Log(curr.Key.name + " unten");
+                        Debug.DrawLine(curr.transform.position, (Vector2)curr.transform.position + Vector2.down * 5f, Color.red, 5);
+                        curr.GetComponent<Rigidbody2D>().velocity = Vector2.down * 3f;
+                        curr.GetComponent<Rigidbody2D>().freezeRotation = true;
+                    }
+                    else
+                    {
+                        //Debug.Log(curr.Key.name + " oben");
+                        Debug.DrawLine(curr.transform.position, (Vector2)curr.transform.position + Vector2.up * 5f, Color.green, 5);
+                        curr.GetComponent<Rigidbody2D>().velocity = Vector2.up * 3f;
+                    }
+
+                }
+                //remove deleted items from objectsToShoot
+                _tempObjectsToShoot = _tempObjectsToShoot.Where(x => x != null).ToList();
+                Debug.Log("check: current:" + _fixedUpdateIterationCount + " == saved:" + _tempCurrentFixedUpdateIterationCount);
+            }
+            else if (_fixedUpdateIterationCount == _tempCurrentFixedUpdateIterationCount +1)
+            {
+                foreach(GameObject curr in _tempObjectsToShoot)
+                {
+                    curr.GetComponent<StoneScript>().SetNoFriction();
+                    curr.GetComponent<Rigidbody2D>().freezeRotation = true;
+                    //curr.GetComponent<Rigidbody2D>().gravityScale = 0;
+
+                    curr.GetComponent<Rigidbody2D>().velocity = Vector2.up * 6f;
+                }
+            }
+            else if (_fixedUpdateIterationCount > _tempCurrentFixedUpdateIterationCount + 10)
+            {
+                if (_tempObjectsToShoot.Count == 0)
+                {
+                    _tempStartedSlicingAction = false;
+                    _tempPushForceForSlicing = 5;
+                    _tempCurrentFixedUpdateIterationCount = -1;
+                    _tempObjectsToMoveOutOfTheWay.Clear();
+                }
+                else
+                {
+                    GameObject farthestObjectToShoot = _tempObjectsToShoot[0];
+                    farthestObjectToShoot.GetComponent<StoneScript>().SetNoFriction();
+                    farthestObjectToShoot.GetComponent<Rigidbody2D>().freezeRotation = true;
+
+                    ApplyPushVelocity(farthestObjectToShoot, _tempDirectionToApply, _tempPushForceForSlicing);
+
+                    Debug.Log($"obj to shoot {farthestObjectToShoot} iteration:{_fixedUpdateIterationCount}");
+
+                    _tempObjectsToShoot.RemoveAt(0);
+                    _tempPushForceForSlicing -= 5;
+                }
+            }
+            /*
+                float distance = (this.transform.position - curr.Key.transform.position).magnitude;
+            ApplyPushVelocity(curr.Key, _tempDirectionToApply, Mathf.Pow(distance, 2));
+
+            _tempPushForceForSlicing;
+            foreach (KeyValuePair<GameObject, float> curr in _tempObjectsToShoot)
+            {                
+                float distance = (this.transform.position - curr.Key.transform.position).magnitude;
+                ApplyPushVelocity(curr.Key, _tempDirectionToApply, Mathf.Pow(distance, 2));
+            }*/
+        }
+    }
+
     private void PerformAttacks()
     {
         _currentMousePos = _cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        if(_stompDelay == null)
+        {
+            Debug.Log($"stompDelay is null");
+        }
 
+        if (_pullDelay == null)
+        {
+            Debug.Log($"_pullDelay is null");
+        }
+        if (_pushDelay == null)
+        {
+            Debug.Log($"_pushDela is null");
+        }
         if (_stompDelay.IsDoingAction && (_stompDelay.ActionDurationInMs > _timeForHover) && !_pullDelay.IsDoingAction && !_pushDelay.IsDoingAction)
         {
             PerformHoverAttack();
@@ -92,49 +204,7 @@ public class BendingScript : MonoBehaviour
 
     private void SetObjectSpeed(GameObject objectToMove, Vector2 attemtedVelocityToApply)
     {
-        /*
-        float maxSpeedChange = 1.5f;
-
-        Rigidbody2D rb = objectToMove.GetComponent<Rigidbody2D>();
-        Vector2 currentVelocity = rb.velocity;
-
-        Debug.DrawLine(objectToMove.transform.position,
-            (Vector2)objectToMove.transform.position + currentVelocity,
-            Color.blue,
-            0.1f);
-
-        //if it faces the same direction
-        if(currentVelocity.normalized == attemtedVelocityToApply.normalized)
-        {
-            //it should check if the speed we try to apply is in the bounds of possebility
-            if(currentVelocity.magnitude+maxSpeedChange <= attemtedVelocityToApply.magnitude)
-            {
-                rb.velocity += currentVelocity.normalized * maxSpeedChange;
-            }
-            else{
-                rb.velocity = attemtedVelocityToApply;
-            }
-        }
-        else
-        {
-            if (currentVelocity.magnitude - maxSpeedChange > 0)
-            {
-                rb.velocity -= currentVelocity.normalized * maxSpeedChange;
-            }
-            else
-            {
-                //if the current velocity is set to zero, it should change direction to the future velocity we try to apply
-        
-                    rb.velocity = attemtedVelocityToApply.normalized * maxSpeedChange;
-                
-            }
-        }
-        Debug.DrawLine(objectToMove.transform.position,
-            (Vector2)objectToMove.transform.position + rb.velocity,
-            Color.red,
-            0.1f);*/
         objectToMove.GetComponent<Rigidbody2D>().velocity = (attemtedVelocityToApply);
-
     }
     private void PerformHoverAttack()
     {
@@ -428,7 +498,7 @@ public class BendingScript : MonoBehaviour
 
                         direction = (_currentMousePos - (Vector2)curr.transform.position).normalized;
 
-                        ApplyPushVelocity(curr, direction);
+                        ApplyPushVelocity(curr, direction, 0);
                     }
                 }
                 else
@@ -459,17 +529,29 @@ public class BendingScript : MonoBehaviour
                         Vector2 playerDownStartPoint = thisPos + ((rightAngle * -1) * (thickness / 2));
 
                         float timeForDebug = 5f;
-
+                        /*
                         Debug.DrawLine(playerUpStartPoint, playerUpStartPoint + mouseToPlayer, Color.green, timeForDebug);
                         Debug.DrawLine(playerDownStartPoint, playerDownStartPoint + mouseToPlayer, Color.green, timeForDebug);
                         Debug.DrawLine(thisPos, thisPos + mouseToPlayer, Color.grey, timeForDebug);
+                        */
 
-                        
                         Pair2D sliceUpperLine = new Pair2D(playerUpStartPoint, playerUpStartPoint + mouseToPlayer);
                         Pair2D sliceLowerLine = new Pair2D(playerDownStartPoint, playerDownStartPoint + mouseToPlayer);
                         List<Slicer2D.Slice2D> upperSlices = Slicer2D.Slicing.LinearSliceAll(sliceUpperLine);
                         List<Slicer2D.Slice2D> lowerSlices = Slicer2D.Slicing.LinearSliceAll(sliceLowerLine);
-                        
+
+                        List<GameObject> slicerOriginObjects = new List<GameObject>();
+
+                        foreach (Slicer2D.Slice2D slice in upperSlices)
+                        {
+                            slicerOriginObjects.Add(slice.originGameObject);
+                        }
+                        foreach (Slicer2D.Slice2D slice in lowerSlices)
+                        {
+                            slicerOriginObjects.Add(slice.originGameObject);
+                        }
+
+                        //lowerSlices[0].originGameObject
                         /*
                         Pair2 sliceUpperLine = new Pair2(playerUpStartPoint, playerUpStartPoint + mouseToPlayer);
                         Pair2 sliceLowerLine = new Pair2(playerDownStartPoint, playerDownStartPoint + mouseToPlayer);
@@ -486,7 +568,10 @@ public class BendingScript : MonoBehaviour
                                 Debug.Log($"origin: {slice.originGameObject.name} upper curr: {curr.name}");
                             }
                         }*/
-                        List<GameObject> objectsThatShallNotMove = new List<GameObject>();
+                        List<GameObject> objectsToGetOutOfTheWay = new List<GameObject>();
+                        List<GameObject> objectsToShoot = new List<GameObject>();
+
+                        Median averageYLevelForShootingObjects = new Median();
 
                         foreach (Slicer2D.Slice2D slice in lowerSlices)
                         {
@@ -498,32 +583,28 @@ public class BendingScript : MonoBehaviour
 
                                 float rightAngleDistanceToCurr = Mathf.Sin(Mathf.Deg2Rad * angleToCurr) * vecToCurr.magnitude;
                                 float parallelDistToCurr = Mathf.Cos(Mathf.Deg2Rad * angleToCurr) * vecToCurr.magnitude;
-
+                                /*
                                 Debug.DrawLine(curr.transform.position,
                                     (Vector2)curr.transform.position + (RightAngle(mouseToPlayer.normalized, true) * rightAngleDistanceToCurr),
                                     Color.blue,
-                                    timeForDebug);
+                                    timeForDebug);*/
                                 if (rightAngleDistanceToCurr <= (thickness / 2))
                                 {
                                     /*Debug.Log($"-------name:{curr.name}--------");
                                     Debug.Log($"angle:{angleToCurr}");
                                     Debug.Log($"righAng:{rightAngleDistanceToCurr}");
-                                    Debug.Log($"parallelDist:{parallelDistToCurr}");*/
+                                    Debug.Log($"parallelDist:{parallelDistToCurr}");
                                     Debug.DrawLine(
                                         thisPos,
                                         thisPos + vecToCurr,
                                         Color.magenta,
-                                        timeForDebug);
-                                    //curr.transform.Translate(Vector2.up * -0.2f * Time.deltaTime);
-                                    curr.GetComponent<StoneScript>().SetNoFriction();
-                                    ApplyPushVelocity(curr, mouseToPlayer.normalized);
+                                        timeForDebug);*/
+                                    averageYLevelForShootingObjects.Add(curr.transform.position.y);
+                                    objectsToShoot.Add(curr);
                                 }
                                 else
                                 {
-                                    objectsThatShallNotMove.Add(curr);
-                                    //curr.transform.Translate(Vector2.up * -0.1f);
-                                    //curr.GetComponent<Rigidbody2D>().gravityScale = 0;
-                                    curr.GetComponent<Rigidbody2D>().velocity = Vector2.up * 5f;
+                                    objectsToGetOutOfTheWay.Add(curr);
                                 }
                             }
                         }
@@ -531,49 +612,38 @@ public class BendingScript : MonoBehaviour
                         {
                             foreach (GameObject curr in slice.GetGameObjects())
                             {
-                                if (curr != null)
-                                {
-
-                                    objectsThatShallNotMove.Add(curr);
-
-                                    //curr.GetComponent<Rigidbody2D>().velocity += Vector2.down * 3f;
-
-                                    //curr.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
-                                }
+                                objectsToGetOutOfTheWay.Add(curr);
                             }
                         }
-
-                        foreach (GameObject curr in objectsThatShallNotMove)
+                        foreach (GameObject curr in slicerOriginObjects)
                         {
-                            Debug.Log(curr.name);
-                            //curr.GetComponent<Rigidbody2D>().freezeRotation = true;
-
+                            if (objectsToGetOutOfTheWay.Contains(curr))
+                            {
+                                objectsToGetOutOfTheWay.Remove(curr);
+                            }
                         }
-                        /*
-                        foreach (Slicer2D.Slice2D currentSlice in slices)
+                        foreach (GameObject curr in objectsToGetOutOfTheWay)
                         {
-                            GameObject objectToShoot = null;
-                            float lastDistance = float.MaxValue;
+                            _tempObjectsToMoveOutOfTheWay.Add(curr);
+                        }
+                        foreach (GameObject curr in objectsToShoot)
+                        {
+                            _tempObjectsToShoot.Add(curr);
+                        }
+                        _tempDirectionToApply = mouseToPlayer.normalized;
+                        _tempHeightForMovingOutOfTheWay = averageYLevelForShootingObjects.GetMedian();
+                        _tempStartedSlicingAction = true;
+                        _tempCurrentFixedUpdateIterationCount = _fixedUpdateIterationCount;
 
-                            foreach (GameObject currentGameObject in currentSlice.GetGameObjects())
-                            {
-                                Vector2 middlePointOfVector = thisPos + (mouseToPlayer / 2);
+                        float GetDistanceToPlayer(GameObject obj)
+                        {
+                            return (this.transform.position - obj.transform.position).magnitude;
+                        }
 
-                                DrawPoint(middlePointOfVector);
-
-                                float currDistance = ((Vector2)currentGameObject.transform.position - middlePointOfVector).magnitude;
-
-                                if (objectToShoot == null || currDistance < lastDistance)
-                                {
-                                    objectToShoot = currentGameObject;
-                                    lastDistance = currDistance;
-                                }
-                            }
-                            if (objectToShoot != null)
-                            {
-                                ApplyPushVelocity(objectToShoot, (_currentMousePos - (Vector2)this.transform.position).normalized);
-                            }
-                        }*/
+                        _tempObjectsToShoot.Sort((firstObj, secondObj) =>
+                        {
+                            return (GetDistanceToPlayer(firstObj).CompareTo(GetDistanceToPlayer(secondObj))) * -1;
+                        });
                     }
                 }
             }
@@ -606,10 +676,15 @@ public class BendingScript : MonoBehaviour
         Debug.DrawLine(point, point + (Vector2.down * size), color, time);
 
     }
-    private void ApplyPushVelocity(GameObject obj, Vector2 dir)
+    private void ApplyPushVelocity(GameObject obj, Vector2 dir, float additionalForce)
     {
         dir *= SpeedForStoneShooting;
         //dir.y *= 0.2f;
+        dir += (dir.normalized * additionalForce);
+        Debug.DrawLine(obj.transform.position,
+            (Vector2)obj.transform.position + dir.normalized,
+            Color.yellow, 50f);
+        Debug.Log($"{obj.name} applied {dir.magnitude} push velo");
         SetObjectSpeed(obj, dir);
     }
     public void StompAttack(InputAction.CallbackContext context)
@@ -688,6 +763,8 @@ public class BendingScript : MonoBehaviour
         if (context.performed)
         {
             _testStateIsOn = !_testStateIsOn;
+            Time.timeScale *= 0.5f;
+            Time.fixedDeltaTime *= 0.5f;
         }
     }
     public void TestMethod(GameObject givenObject, Vector2 toPointTo)
@@ -695,6 +772,7 @@ public class BendingScript : MonoBehaviour
         //takes an object and goes in the direction of the point, till the collider bounds are reached
         if (_testStateIsOn)
         {
+
             Vector2 bounds = givenObject.GetComponent<Collider2D>().bounds.size / 2;
             Vector2 objectPos = toPointTo;
             Vector2 collPos = givenObject.transform.position;
@@ -728,7 +806,7 @@ public class BendingScript : MonoBehaviour
 
             float diffX = diff(offset.x, bounds.x);
             float diffY = diff(offset.y, bounds.y);
-            Debug.Log($"after offset:{offset} bounds:{bounds} diffX: {diffX} diffY: {diffY}");
+            //Debug.Log($"after offset:{offset} bounds:{bounds} diffX: {diffX} diffY: {diffY}");
 
             float multX = 1;
             float multY = 1;
@@ -743,14 +821,17 @@ public class BendingScript : MonoBehaviour
                 multX = bounds.x / offset.x;
 
             }
-            Debug.Log($"multx {multX} multy {multY} ");
+            //Debug.Log($"multx {multX} multy {multY} ");
 
             //float optinalMult = multY == 1 || multX == 1 ? 1 : 2;
 
-            Debug.DrawLine(collPos,
-                               collPos + (offset * multY * multX),
-                               Color.blue,
-                               0.1f);
+            /*            Debug.DrawLine(collPos,
+                                           collPos + (offset * multY * multX),
+                                           Color.blue,
+                                           0.1f);
+                        DrawBounds(givenObject);
+            */
+
             /*
 
             Vector2 offsetDir = offset.normalized;
@@ -766,7 +847,7 @@ public class BendingScript : MonoBehaviour
                     offset.x = bounds.x * -1f;
                 }
             }
-                
+
             float multX = offset.x / offSetBefore.x;
             offset *= (1-multX);
 
@@ -776,12 +857,7 @@ public class BendingScript : MonoBehaviour
                 Color.blue,
                 0.1f);
             */
-            DrawBounds(givenObject);
         }
-    }
-    private float mittelwert(float a, float b)
-    {
-        return (a + b) / 2;
     }
     private float positivVal(float val)
     {

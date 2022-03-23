@@ -8,14 +8,15 @@ public class StoneScript : MonoBehaviour
     private Rigidbody2D _rb;
 
     [SerializeField]
-    private PhysicsMaterial2D _default;
+    private PhysicsMaterial2D _defaultMaterial;
     [SerializeField]
-    private PhysicsMaterial2D _nofriction;
+    private PhysicsMaterial2D _noFrictionMaterial;
 
     private bool _noFrictionNextUpdate = false;
 
     //at that velocity or higher, it can happen, that the stone gets stuck in a wall or in another stone
     private float criticalSpeed = 5f; //is only a rough value -> could be higher (it is not tested)
+    private Delay frictionToNormalDelay = new Delay(1, false);
     //private bool shallExplode = false;
     //private float explosionSpeed = 7f;
     //private Delay explosionDelay;
@@ -62,9 +63,16 @@ public class StoneScript : MonoBehaviour
 
         if (_noFrictionNextUpdate)
         {
-            _rb.sharedMaterial = _nofriction;
+            _rb.sharedMaterial = _noFrictionMaterial;
             _noFrictionNextUpdate = false;
         }
+        /*if (frictionToNormalDelay.ActionDurationInMs > 5000)
+        {
+            _rb.sharedMaterial = _defaultMaterial;
+        }*/
+
+
+
         //ExplodeIfTooFast();
 
     }
@@ -88,8 +96,7 @@ public class StoneScript : MonoBehaviour
     }*/
     public void SetNoFriction()
     {
-
         _noFrictionNextUpdate = true;
-
+        frictionToNormalDelay.StartAction();
     }
 }

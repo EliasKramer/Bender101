@@ -166,8 +166,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aed6bd25595298340b566df3c50d3b29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _default: {fileID: 6200000, guid: 84eb9988231a2ee44b35c54986673c99, type: 2}
-  _nofriction: {fileID: 6200000, guid: b95d58a32f7f071468198810fe5ee3f6, type: 2}
+  _defaultMaterial: {fileID: 6200000, guid: 84eb9988231a2ee44b35c54986673c99, type: 2}
+  _noFrictionMaterial: {fileID: 6200000, guid: b95d58a32f7f071468198810fe5ee3f6, type: 2}
 --- !u!114 &3594897287671356801
 MonoBehaviour:
   m_ObjectHideFlags: 0
