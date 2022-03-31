@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SideColliderScript : MonoBehaviour
 {
-    [SerializeField]
+    /*[SerializeField]
     Const.CollisionSide _side;
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -19,5 +19,5 @@ public class SideColliderScript : MonoBehaviour
         {
             GetComponentInParent<PlayerMovementScript>().CollisionUpdateByChildCollider(false, _side);
         }
-    }
+    }*/
 }

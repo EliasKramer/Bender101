@@ -6,210 +6,240 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovementScript : MonoBehaviour
 {
-    /// <summary>
-    /// physic simulation 
-    /// </summary>
-    public Rigidbody2D rb;
-    /// <summary>
-    /// the speed of the character 
-    /// </summary>
-    private float _speed = 5f;
-    /// <summary>
-    /// the amout the speed is multiplied if the character is in the air
-    /// </summary>
-    private float _speedInAirMultp = 0.75f;
-    /// <summary>
-    /// the force the player jumps with
-    /// </summary>
-    private float _jumpForce = 6.5f;
-    /// <summary>
-    /// the max amount of jumps in the air
-    /// </summary>
-    private short _maxJumps = 2;
-    /// <summary>
-    /// the amount of jumps currently left to the player while in air
-    /// </summary>
-    private short _jumpsLeft;
-    /// <summary>
-    /// is set to true if something is colliding with the players head
-    /// </summary>
-    private bool _isCollidingWithHead = false;
-    /// <summary>
-    /// the direction the player is facing
-    /// </summary>
-    private Direction _inputDirection = Direction.Right;
-    /// <summary>
-    /// 
-    /// </summary>
-    private float _inputDirectionFloat = 1; //is between -1 and 1: 1 is right -1 left
-    /// <summary>
-    /// array of collisions on all sides
-    /// </summary>
-    private bool[] allCollisions = new bool[4];
-    /// <summary>
-    /// is set to the last time something was pressed
-    /// </summary>
-    private System.DateTime _lastTimePressed;
-    /// <summary>
-    /// is the mininum of delay 
-    /// </summary>
-    private float _minDelayBetweenJumpsInMs = 300;
-    private Vector2 _inputVector;
-    private float _slidingSpeed = -0.5f;
+    [SerializeField]
+    private float movementSpeed;
+    [SerializeField]
+    private float jumpForce;
+    [SerializeField]
+    private float slopeCheckDistance;
+    [SerializeField]
+    private float maxSlopeAngle;
+    [SerializeField]
+    private LayerMask whatIsGround;
+    [SerializeField]
+    private PhysicsMaterial2D noFriction;
+    [SerializeField]
+    private PhysicsMaterial2D fullFriction;
 
+    private float xInput;
+    private float slopeDownAngle;
+    private float slopeSideAngle;
+    private float lastSlopeAngle;
+    private float groundCheckRadius;
 
-    /// <summary>
-    /// gets called when the game is updated
-    /// </summary>
-    void Start()
+    private int facingDirection = 1;
+
+    private bool isGrounded;
+    private bool isOnSlope;
+    private bool isJumping;
+    private bool canWalkOnSlope;
+    private bool canJump;
+
+    private Vector2 bottomColliderPos;
+    private Vector2 newVelocity;
+    private Vector2 newForce;
+    private Vector2 positionForGroundCheckCollider;
+    private Vector2 capsuleColliderSize;
+
+    private Vector2 slopeNormalPerp;
+
+    private Rigidbody2D rb;
+    private CapsuleCollider2D cc;
+
+    private Vector2 inputVector;
+
+    private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.velocity = new Vector2(0, 0);
-        _jumpsLeft = _maxJumps;
-        _lastTimePressed = System.DateTime.UtcNow;
-        _inputVector = new Vector2(0, 0);
+        inputVector = new Vector2();
+        cc = GetComponent<CapsuleCollider2D>();
+        groundCheckRadius = cc.bounds.size.x/2;
+        capsuleColliderSize = cc.size;
     }
 
-
-    /// <summary>
-    ///  update is called to update the current state of the player. It is called once per frame
-    /// </summary>
-    void Update()
+    private void Update()
     {
-        Move();
-        //Debug.Log($"amout of jump: {_jumpsLeft}");
-        //PrintColliders();
+        CheckInput();
+        ApplyMovement();
     }
 
-
-    private void PrintColliders()
+    private void FixedUpdate()
     {
-        Debug.Log($"up:{isCollidingOnSide(Const.CollisionSide.Up)}|down:{isCollidingOnSide(Const.CollisionSide.Down)}|left:{isCollidingOnSide(Const.CollisionSide.Left)}|right:{isCollidingOnSide(Const.CollisionSide.Right)}");
+        Vector2 tempThisPos = cc.bounds.center;
+        tempThisPos.y -= cc.bounds.size.y / 2;
+        bottomColliderPos = tempThisPos;
+        CheckGround();
+        SlopeCheck();
     }
 
-
-    /// <summary>
-    /// Checks if the player is colliding with a side
-    /// </summary>
-    /// <param name="side">the side to be checked</param>
-    /// <returns>true if the two objects are colliding</returns>
-    public bool isCollidingOnSide(Const.CollisionSide side)
+    private void CheckInput()
     {
-        return allCollisions[(int)side];
-    }
 
-    /// <summary>
-    /// a method which is called by childcollider to update the current collides
-    /// </summary>
-    /// <param name="val">if the collision is wanted to be added this should be true else the collision will get removed</param>
-    /// <param name="side">the side the collision is on</param>
-    public void CollisionUpdateByChildCollider(bool val, Const.CollisionSide side)
-    {
-        allCollisions[(int)side] = val;
-        if (val && side == Const.CollisionSide.Down)
+        if (inputVector.x > 0 && facingDirection == -1)
         {
-            _jumpsLeft = _maxJumps;
+            Flip();
         }
-        //Debug.Log($"")
-    }
-
-    /// <summary>
-    /// a method which allows the player to move
-    /// </summary>
-    void Move()
-    {
-        GetDirection();
-        MoveAndJump();
-    }
-    /// <summary>
-    /// gets the direction the placer is facing
-    /// </summary>
-    private void GetDirection()
-    {
-        //Debug.Log($"dirvec: {_inputVector}");
-        //Debug.Log($"dirvec: {Mathf.Round(_inputVector.x)}");
-        _inputDirectionFloat = Mathf.Round(_inputVector.x);//Input.GetAxis("Horizontal");
-        if (_inputDirectionFloat < 0)
+        else if (inputVector.x < 0 && facingDirection == 1)
         {
-            _inputDirection = Direction.Left;
-        }
-        else if (_inputDirectionFloat > 0)
-        {
-            _inputDirection = Direction.Right;
-        }
-    }
-
-    /// <summary>
-    /// Does all tge movement thingies
-    /// </summary>
-    private void MoveAndJump()
-    {
-        float movementX = 0;
-        movementX = _inputDirectionFloat * _speed;
-        if (_jumpsLeft < _maxJumps)
-        {
-            //Debug.Log("airspeedmult active");
-            movementX *= _speedInAirMultp;
+            Flip();
         }
 
-        if (_inputDirection == Direction.Right && isCollidingOnSide(Const.CollisionSide.Right) && !isCollidingOnSide(Const.CollisionSide.Down))
-        {
-            movementX = 0;
-        }
-        if (_inputDirection == Direction.Left && isCollidingOnSide(Const.CollisionSide.Left) &&
-            !isCollidingOnSide(Const.CollisionSide.Down))
-        {
-            movementX = 0;
-        }
-        if ((isCollidingOnSide(Const.CollisionSide.Left) || isCollidingOnSide(Const.CollisionSide.Right)) && rb.velocity.y < _slidingSpeed)
-        {
+        
 
-            rb.velocity = new Vector2(movementX, _slidingSpeed);
+    }
+    private void CheckGround()
+    {
+        //tempThisPos.y += groundCheckRadius;
+        positionForGroundCheckCollider = bottomColliderPos;
+        positionForGroundCheckCollider.y += groundCheckRadius;
+        isGrounded = Physics2D.OverlapCircle(positionForGroundCheckCollider, groundCheckRadius, whatIsGround);
+
+        if (rb.velocity.y <= 0.0f)
+        {
+            isJumping = false;
+        }
+
+        if (isGrounded && !isJumping && slopeDownAngle <= maxSlopeAngle)
+        {
+            canJump = true;
+        }
+
+    }
+
+    private void SlopeCheck()
+    {
+        //Vector2 checkPos = transform.position - (Vector3)(new Vector2(0.0f, capsuleColliderSize.y / 2));
+
+        SlopeCheckHorizontal();
+        SlopeCheckVertical();
+    }
+
+    private void SlopeCheckHorizontal()
+    {
+        RaycastHit2D slopeHitFront = Physics2D.Raycast(bottomColliderPos, transform.right, slopeCheckDistance, whatIsGround);
+        RaycastHit2D slopeHitBack = Physics2D.Raycast(bottomColliderPos, -transform.right, slopeCheckDistance, whatIsGround);
+
+        if (slopeHitFront)
+        {
+            isOnSlope = true;
+
+            slopeSideAngle = Vector2.Angle(slopeHitFront.normal, Vector2.up);
+
+        }
+        else if (slopeHitBack)
+        {
+            isOnSlope = true;
+
+            slopeSideAngle = Vector2.Angle(slopeHitBack.normal, Vector2.up);
         }
         else
         {
-            rb.velocity = new Vector2(movementX, rb.velocity.y);
+            slopeSideAngle = 0.0f;
+            isOnSlope = false;
         }
-        if ((Mathf.Round(_inputVector.y) == 1) && _jumpsLeft > 0 && HasEnoughDelay())
+
+    }
+
+    private void SlopeCheckVertical()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(bottomColliderPos, Vector2.down, slopeCheckDistance, whatIsGround);
+        Debug.DrawLine(bottomColliderPos, bottomColliderPos + (Vector2.down * slopeCheckDistance), Color.black, 1);
+        if (hit)
         {
-            //Debug.Log($"beforeJump jl: {_jumpsLeft}| afterjump jl: {_jumpsLeft}");
-            rb.velocity = new Vector2(0, _jumpForce);
-            _jumpsLeft--;
+
+            slopeNormalPerp = Vector2.Perpendicular(hit.normal).normalized;
+
+            slopeDownAngle = Vector2.Angle(hit.normal, Vector2.up);
+
+            if (slopeDownAngle != lastSlopeAngle)
+            {
+                isOnSlope = true;
+            }
+
+            lastSlopeAngle = slopeDownAngle;
+
+            Debug.DrawRay(hit.point, slopeNormalPerp, Color.blue, 2);
+            Debug.DrawRay(hit.point, hit.normal, Color.green, 2);
+
+        }
+
+        if (slopeDownAngle > maxSlopeAngle || slopeSideAngle > maxSlopeAngle)
+        {
+            canWalkOnSlope = false;
+        }
+        else
+        {
+            canWalkOnSlope = true;
+        }
+
+        if (isOnSlope && canWalkOnSlope && xInput == 0.0f)
+        {
+            rb.sharedMaterial = fullFriction;
+        }
+        else
+        {
+            rb.sharedMaterial = noFriction;
         }
     }
 
-
-
-    public void MoveAction(InputAction.CallbackContext context)
+    private void Jump()
     {
+        if (canJump)
+        {
+            canJump = false;
+            isJumping = true;
+            newVelocity.Set(0.0f, 0.0f);
+            rb.velocity = newVelocity;
+            newForce.Set(0.0f, jumpForce);
+            rb.AddForce(newForce, ForceMode2D.Impulse);
+        }
+    }
+
+    private void ApplyMovement()
+    {
+        int xVector = inputVector.x > 0 ? 1 : inputVector.x < 0 ? -1 : 0;
+
+        if (isGrounded && !isOnSlope && !isJumping) //if not on slope
+        {
+            Debug.Log("This one");
+            newVelocity.Set(movementSpeed * xVector, rb.velocity.y);
+            rb.velocity = newVelocity;
+        }
+        else if (isGrounded && isOnSlope && canWalkOnSlope && !isJumping) //If on slope
+        {
+            newVelocity.Set(movementSpeed * slopeNormalPerp.x * -xVector, movementSpeed * slopeNormalPerp.y * -xVector);
+            rb.velocity = newVelocity;
+        }
+        else if (!isGrounded) //If in air
+        {
+            newVelocity.Set(movementSpeed * xVector, rb.velocity.y);
+            rb.velocity = newVelocity;
+        }
+        if (inputVector.y > 0)
+        {
+            Jump();
+        }
+
+    }
+
+    private void Flip()
+    {
+<<<<<<< HEAD:Assets/player/playerScript.cs
+        
+=======
         //Debug.Log($"inputthrough new system:{context.ReadValue<Vector2>()}");
         _inputVector = context.ReadValue<Vector2>();
         //Debug.Log($"input vec: {_inputVector}");
+>>>>>>> 7f8d121af6825675767b6ca124fcfca443e87284:Assets/player/PlayerMovementScript.cs
     }
 
-
-    /// <summary>
-    /// Check if enough delay has passed 
-    /// </summary>
-    /// <returns>True(if enough delay has passed)</returns>
-    private bool HasEnoughDelay()
+    private void OnDrawGizmos()
     {
-        System.DateTime startTime = System.DateTime.Now;
-        if ((startTime - _lastTimePressed).TotalMilliseconds >= _minDelayBetweenJumpsInMs)
-        {
-            //Debug.Log($"delay = {(startTime - _lastTimePressed).TotalMilliseconds}|jl:{_jumpsLeft}");
-            _lastTimePressed = startTime;
-            return true;
-        }
-        return false;
+        Gizmos.DrawWireSphere(positionForGroundCheckCollider, groundCheckRadius);
     }
 
-    /// <summary>
-    /// an enum for directions
-    /// </summary>
-    enum Direction
+    public void ReadMovementInput(InputAction.CallbackContext context)
     {
-        Right,
-        Left
-    };
+        inputVector = context.ReadValue<Vector2>();
+    }
 }
