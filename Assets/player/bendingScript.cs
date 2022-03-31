@@ -50,8 +50,6 @@ public class BendingScript : MonoBehaviour
     private bool _tempStartedSlicingAction;
     private long _tempCurrentFixedUpdateIterationCount;
     private float _tempPushForceForSlicing = 5;
-    private Vector2 _tempMousePosWhenShooted;
-    private Vector2 _tempPlayerPosWhenShooted;
     //end of temps
     public Camera _cam;
 
@@ -92,13 +90,6 @@ public class BendingScript : MonoBehaviour
     {
         if (_tempStartedSlicingAction)
         {
-            void StopSlicingAction()
-            {
-                _tempStartedSlicingAction = false;
-                _tempPushForceForSlicing = 5;
-                _tempCurrentFixedUpdateIterationCount = -1;
-                _tempObjectsToMoveOutOfTheWay.Clear();
-            }
             if (_fixedUpdateIterationCount == _tempCurrentFixedUpdateIterationCount)
             {
                 //remove items that were null because slicer removed them if they were too small
@@ -112,39 +103,29 @@ public class BendingScript : MonoBehaviour
                         Destroy(obj.GetComponent<Slicer2D.Sliceable2D>());
                     }
                 }*/
-                if(_tempObjectsToShoot.Count == 0)
-                {
-                    StopSlicingAction();
-                }
-                else
-                {
-                    Vector2 nearestObjToShoot = _tempObjectsToShoot.Last().transform.position;
-                    Debug.Log($"nearest to shoot {_tempObjectsToShoot.Last().name}");
 
-                    Vector2 mouseToPlayerWhenActionWasDone = _tempMousePosWhenShooted - _tempPlayerPosWhenShooted;
+                _tempPushForceForSlicing = _tempObjectsToShoot.Count() * 5;
+                foreach (GameObject curr in _tempObjectsToMoveOutOfTheWay)
+                {
 
-                    _tempPushForceForSlicing = _tempObjectsToShoot.Count() * 5;
-                    foreach (GameObject curr in _tempObjectsToMoveOutOfTheWay)
+                    curr.GetComponent<StoneScript>().SetNoFriction(1000);
+                    curr.GetComponent<StoneScript>().FreezeRotation(1000);
+
+                    if (curr.transform.position.y < _tempHeightForMovingOutOfTheWay)
                     {
-
-                        Vector2 playerToCurrentObjectVec = (Vector2)curr.transform.position - _tempPlayerPosWhenShooted;
-                        float angleToCurrentObjectInDeg = Vector2.Angle(mouseToPlayerWhenActionWasDone, playerToCurrentObjectVec);
-                        float parallelDistToCurr = Mathf.Cos(Mathf.Deg2Rad * angleToCurrentObjectInDeg) * playerToCurrentObjectVec.magnitude;
-
-                        Debug.Log($"distTo {curr.name}: {parallelDistToCurr}");
-                        Debug.DrawLine(_tempPlayerPosWhenShooted, _tempPlayerPosWhenShooted + (mouseToPlayerWhenActionWasDone.normalized) * parallelDistToCurr, Color.white, 5);
-
-                        curr.GetComponent<StoneScript>().SetNoFriction(1000);
-                        curr.GetComponent<StoneScript>().FreezeRotation(1000);
-
-                        Vector2 upOrDownMult = curr.transform.position.y < _tempHeightForMovingOutOfTheWay ? Vector2.down : Vector2.up;
-
-                        Debug.DrawLine(curr.transform.position, (Vector2)curr.transform.position + upOrDownMult * 5f, Color.red, 5);
-                        curr.GetComponent<Rigidbody2D>().velocity = upOrDownMult * 1f;
-
-
+                        //Debug.Log(curr.Key.name + " unten");
+                        Debug.DrawLine(curr.transform.position, (Vector2)curr.transform.position + Vector2.down * 5f, Color.red, 5);
+                        curr.GetComponent<Rigidbody2D>().velocity = Vector2.down * 6f;
+                    }
+                    else
+                    {
+                        //Debug.Log(curr.Key.name + " oben");
+                        Debug.DrawLine(curr.transform.position, (Vector2)curr.transform.position + Vector2.up * 5f, Color.green, 5);
+                        curr.GetComponent<Rigidbody2D>().velocity = Vector2.up * 6f;
                     }
                 }
+                //remove deleted items from objectsToShoot
+                _tempObjectsToShoot = _tempObjectsToShoot.Where(x => x != null).ToList();
             }
             else if (_fixedUpdateIterationCount == _tempCurrentFixedUpdateIterationCount + 1)
             {
@@ -157,15 +138,18 @@ public class BendingScript : MonoBehaviour
                     curr.GetComponent<Rigidbody2D>().velocity = Vector2.up * 3f;
                 }
             }
-            if (_fixedUpdateIterationCount > _tempCurrentFixedUpdateIterationCount + 1)
+            else if (_fixedUpdateIterationCount > _tempCurrentFixedUpdateIterationCount + 10)
             {
                 if (_tempObjectsToShoot.Count == 0)
                 {
-                    StopSlicingAction();
+                    _tempStartedSlicingAction = false;
+                    _tempPushForceForSlicing = 5;
+                    _tempCurrentFixedUpdateIterationCount = -1;
+                    _tempObjectsToMoveOutOfTheWay.Clear();
 
                     foreach (GameObject curr in _tempObjectsToMoveOutOfTheWay)
                     {
-                        //curr.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                        curr.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
                     }
                     //Debug.Log("all out of the way set to zero");
                 }
@@ -175,11 +159,23 @@ public class BendingScript : MonoBehaviour
                     //farthestObjectToShoot.GetComponent<StoneScript>().SetNoFriction(1000);
                     //farthestObjectToShoot.GetComponent<StoneScript>().FreezeRotation(1000);
                     ApplyPushVelocity(farthestObjectToShoot, _tempDirectionToApply, _tempPushForceForSlicing);
+
+                    //Debug.Log($"obj to shoot {farthestObjectToShoot} iteration:{_fixedUpdateIterationCount}");
+
                     _tempObjectsToShoot.RemoveAt(0);
                     _tempPushForceForSlicing -= 5;
                 }
             }
+            /*
+                float distance = (this.transform.position - curr.Key.transform.position).magnitude;
+            ApplyPushVelocity(curr.Key, _tempDirectionToApply, Mathf.Pow(distance, 2));
 
+            _tempPushForceForSlicing;
+            foreach (KeyValuePair<GameObject, float> curr in _tempObjectsToShoot)
+            {                
+                float distance = (this.transform.position - curr.Key.transform.position).magnitude;
+                ApplyPushVelocity(curr.Key, _tempDirectionToApply, Mathf.Pow(distance, 2));
+            }*/
         }
     }
 
@@ -533,8 +529,6 @@ public class BendingScript : MonoBehaviour
                         Vector2 thisPos = transform.position;
 
                         Vector2 mouseToPlayer = _currentMousePos - thisPos;
-                        _tempMousePosWhenShooted = _currentMousePos;
-                        _tempPlayerPosWhenShooted = thisPos;
 
                         Vector2 rightAngle = RightAngle(mouseToPlayer, true).normalized;
 
