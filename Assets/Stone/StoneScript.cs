@@ -25,7 +25,6 @@ public class StoneScript : MonoBehaviour
 
     void Start()
     {
-        //hello
         _rb = GetComponent<Rigidbody2D>();
 
     }
